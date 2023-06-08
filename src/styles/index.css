@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: 'Inter', 'sans-serif';
+}
+
+@layer components {
+    .flexCenter {
+        @apply flex items-center justify-center;
+    }
+
+    .flexCenterCol {
+        @apply flex flex-col items-center justify-center;
+    }
+
+    .flexCenterColGap {
+        @apply flex flex-col items-center justify-center gap-6;
+    }
+
+    .flexCenterGap {
+        @apply flex items-center justify-center gap-6;
+    }
+
+    .flexCol {
+        @apply flex flex-col;
+    }
+
+    .flexColGap {
+        @apply flex flex-col gap-6;
+    }
+
+    .flexBetween {
+        @apply flex items-center justify-between;
+    }
+
+    .flexBetweenGap {
+        @apply flex items-center justify-between gap-6;
+    }
+
+    .flexStart {
+        @apply flex items-center justify-start;
+    }
+
+    .flexStartCol {
+        @apply flex flex-col items-center justify-start;
+    }
+
+    .flexStartGap {
+        @apply flex items-center justify-start gap-6;
+    }
+
+    .flexEnd {
+        @apply flex items-center justify-end;
+    }
+
+    .flexEndGap {
+        @apply flex items-center justify-end gap-6;
+    }
+
+    .flexAround {
+        @apply flex items-center justify-around;
+    }
+
+    .flexAroundGap {
+        @apply flex items-center justify-around gap-6;
+    }
+
+    .flexEvenly {
+        @apply flex items-center justify-evenly;
+    }
+
+    .flexEvenlyGap {
+        @apply flex items-center gap-6 justify-evenly;
+    }
+
+    .inputSecondary {
+        @apply w-full px-4 py-3 border rounded-lg border-borderPrimary focus:outline-none focus:border-primary;
+    }
+
+    .textLink {
+        @apply text-sm text-link hover:underline md:text-base;
+    }
+}
