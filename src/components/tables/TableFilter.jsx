@@ -4,7 +4,7 @@ export default function TableFilter({ filter, setFilter }) {
             <input
                 type='text'
                 placeholder='Search…'
-                className='input input-bordered'
+                className='py-2 input input-bordered input-md h-fit'
                 value={filter || ''}
                 onChange={(e) => setFilter(e.target.value)}
             />

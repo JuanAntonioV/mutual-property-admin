@@ -3,6 +3,7 @@ import MainTable from '@/components/tables/MainTable';
 import { useMemo } from 'react';
 
 import { AiOutlineFileSearch } from 'react-icons/ai';
+import SectionHeader from '../../../components/headers/SectionHeader';
 
 export default function NewPostSection() {
     const columns = useMemo(
@@ -52,14 +53,10 @@ export default function NewPostSection() {
 
     return (
         <SectionWrapper>
-            <header className='pb-5 mb-6 border-b border-borderPrimary'>
-                <h2 className='text-xl font-semibold text-gray-700'>
-                    Property Terbaru
-                </h2>
-                <p className='text-sm text-gray-400'>
-                    List property terbaru yang ditambahkan
-                </p>
-            </header>
+            <SectionHeader
+                title={'Property Terbaru'}
+                detail={'List property terbaru yang ditambahkan'}
+            />
 
             <MainTable data={data} columns={columns} />
         </SectionWrapper>
