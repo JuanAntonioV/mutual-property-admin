@@ -10,7 +10,7 @@ export default function MainLayout() {
             <MainSidebar />
             <MainHeader />
 
-            <main className='w-full h-[calc(100vh-96px)] xl:col-span-6 lg:col-span-4 bg-white overflow-auto'>
+            <main className='w-full h-[calc(100vh-96px)] xl:col-span-6 lg:col-span-4 bg-white overflow-auto '>
                 <MainContainer>
                     <Outlet />
                 </MainContainer>
