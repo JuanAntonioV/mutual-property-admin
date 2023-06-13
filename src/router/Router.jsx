@@ -1,5 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
-import LoginPage from '../pages/auth/LoginPage';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import LoginPage from '../pages/auth/login/LoginPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import MainLayout from '../layouts/MainLayout';
 import NotFoundPage from '../pages/notFound/NotFoundPage';
@@ -10,11 +10,14 @@ import ContactPage from '../pages/ContactPage';
 import ProfilePage from '../pages/profiles/ProfilePage';
 import AdminDetailPage from '../pages/admin/AdminDetailPage';
 import CreateAdminPage from '../pages/admin/CreateAdminPage';
+import ForgotPasswordPage from '../pages/auth/forgot-password/ForgotPasswordPage';
 
 export default function Router() {
     return (
         <Routes>
+            <Route path='/' element={<Navigate to='/dashboard' />} />
             <Route path='/login' element={<LoginPage />} />
+            <Route path='/forgot-password' element={<ForgotPasswordPage />} />
 
             <Route element={<MainLayout />}>
                 <Route path='/dashboard' element={<DashboardPage />} />
