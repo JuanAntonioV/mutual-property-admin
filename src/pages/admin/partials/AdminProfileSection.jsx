@@ -82,6 +82,27 @@ export default function AdminProfileSection() {
                             </span>
                         </label>
                     </div>
+                    <div className='w-full form-control'>
+                        <label className='label'>
+                            <span className='label-text'>Status</span>
+                        </label>
+                        <select
+                            className='select select-bordered'
+                            disabled={!isEditMode}
+                        >
+                            <option disabled selected>
+                                Pilih Status
+                            </option>
+                            <option>Aktif</option>
+                            <option>Tidak Aktif</option>
+                        </select>
+                        <label className='label'>
+                            <span className='label-text-alt'>
+                                Dengan mengubah status menjadi tidak aktif, maka
+                                user tidak dapat mengakses aplikasi
+                            </span>
+                        </label>
+                    </div>
 
                     <div>
                         <p className='pb-3 mt-10 mb-4 font-semibold border-b'>
@@ -111,6 +132,20 @@ export default function AdminProfileSection() {
                             name='phoneNumber'
                             type='text'
                             placeholder='Masukkan nomor telepon anda'
+                            className='w-full input input-bordered'
+                            required
+                            disabled={!isEditMode}
+                            onChange={handleOnProfileFormChange}
+                        />
+                    </div>
+                    <div className='w-full form-control'>
+                        <label className='label'>
+                            <span className='label-text'>Tanggal Masuk</span>
+                        </label>
+                        <input
+                            name='joinDate'
+                            type='date'
+                            placeholder='Masukkan tanggal masuk'
                             className='w-full input input-bordered'
                             required
                             disabled={!isEditMode}

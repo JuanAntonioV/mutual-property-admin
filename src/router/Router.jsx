@@ -11,6 +11,7 @@ import ProfilePage from '../pages/profiles/ProfilePage';
 import AdminDetailPage from '../pages/admin/AdminDetailPage';
 import CreateAdminPage from '../pages/admin/CreateAdminPage';
 import ForgotPasswordPage from '../pages/auth/forgot-password/ForgotPasswordPage';
+import CreatePropertyPage from '../pages/property/create/CreatePropertyPage';
 
 export default function Router() {
     return (
@@ -21,7 +22,13 @@ export default function Router() {
 
             <Route element={<MainLayout />}>
                 <Route path='/dashboard' element={<DashboardPage />} />
+
                 <Route path='/property' element={<PropertyPage />} />
+                <Route
+                    path='/property/create/:category'
+                    element={<CreatePropertyPage />}
+                />
+
                 <Route path='/subscriptions' element={<SubscriptionPage />} />
                 <Route path='/contacts' element={<ContactPage />} />
                 <Route path='/profile' element={<ProfilePage />} />

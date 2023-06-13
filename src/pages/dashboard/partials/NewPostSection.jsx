@@ -3,7 +3,7 @@ import MainTable from '@/components/tables/MainTable';
 import { useMemo } from 'react';
 
 import { AiOutlineFileSearch } from 'react-icons/ai';
-import SectionHeader from '../../../components/headers/SectionHeader';
+import SectionHeader from '@/components/headers/SectionHeader';
 
 export default function NewPostSection() {
     const columns = useMemo(
@@ -15,6 +15,10 @@ export default function NewPostSection() {
             {
                 Header: 'Nama Properti',
                 accessor: 'propertyName',
+            },
+            {
+                Header: 'Categori Properti',
+                accessor: 'category',
             },
             {
                 Header: 'Tipe Properti',
@@ -38,8 +42,23 @@ export default function NewPostSection() {
             {
                 count: count++,
                 propertyName: 'Rumah dijual di Jakarta',
+                category: 'Baru',
                 type: 'Rumah',
                 postedAt: '2021-08-20',
+                action: (
+                    <div className='space-x-4'>
+                        <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
+                            <AiOutlineFileSearch size={20} />
+                        </button>
+                    </div>
+                ),
+            },
+            {
+                count: count++,
+                propertyName: 'Rumah dijual di Medan ',
+                category: 'Dijual',
+                type: 'Ruko',
+                postedAt: '2022-08-20',
                 action: (
                     <div className='space-x-4'>
                         <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
