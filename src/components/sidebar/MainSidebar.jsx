@@ -6,6 +6,7 @@ import { MdSpaceDashboard, MdOutlineUnsubscribe } from 'react-icons/md';
 import { RiAdminLine } from 'react-icons/ri';
 import { TbBuildingCommunity } from 'react-icons/tb';
 import { BsMailbox } from 'react-icons/bs';
+import { useEffect } from 'react';
 
 export default function MainSidebar() {
     const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function MainSidebar() {
         {
             name: 'Dashboard',
             icon: <MdSpaceDashboard size={28} color='#fff' />,
-            path: '/',
+            path: '/dashboard',
         },
         {
             name: 'Property',
@@ -38,6 +39,10 @@ export default function MainSidebar() {
             path: '/admins',
         },
     ];
+
+    useEffect(() => {
+        console.log(location.pathname.startsWith('/admins'));
+    }, [location.pathname]);
 
     return (
         <div className='hidden w-full h-screen col-span-1 row-span-2 space-y-6 bg-gray-800 lg:block'>
@@ -62,10 +67,11 @@ export default function MainSidebar() {
                             }
                             key={index}
                             style={{
-                                backgroundColor:
-                                    location.pathname === menu.path
-                                        ? '#1E86FF'
-                                        : '',
+                                backgroundColor: location.pathname.startsWith(
+                                    menu.path
+                                )
+                                    ? '#1E86FF'
+                                    : '',
                             }}
                             onClick={() => navigate(menu.path)}
                         >

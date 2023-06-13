@@ -52,7 +52,7 @@ export default function MainTable({ columns, data, addAction, noFilter }) {
                 {addAction && (
                     <button
                         onClick={addAction}
-                        className='btn btn-primary btn-sm'
+                        className='text-white btn bg-success hover:bg-success/70'
                     >
                         <MdAdd size={16} />
                         <span>Create</span>

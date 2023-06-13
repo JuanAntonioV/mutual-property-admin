@@ -8,6 +8,8 @@ import PropertyPage from '../pages/property/PropertyPage';
 import SubscriptionPage from '../pages/subscriptions/SubscriptionPage';
 import ContactPage from '../pages/ContactPage';
 import ProfilePage from '../pages/profiles/ProfilePage';
+import AdminDetailPage from '../pages/admin/AdminDetailPage';
+import CreateAdminPage from '../pages/admin/CreateAdminPage';
 
 export default function Router() {
     return (
@@ -15,12 +17,14 @@ export default function Router() {
             <Route path='/login' element={<LoginPage />} />
 
             <Route element={<MainLayout />}>
-                <Route path='/' element={<DashboardPage />} />
+                <Route path='/dashboard' element={<DashboardPage />} />
                 <Route path='/property' element={<PropertyPage />} />
                 <Route path='/subscriptions' element={<SubscriptionPage />} />
                 <Route path='/contacts' element={<ContactPage />} />
                 <Route path='/profile' element={<ProfilePage />} />
                 <Route path='/admins' element={<AdminPage />} />
+                <Route path='/admins/:id' element={<AdminDetailPage />} />
+                <Route path='/admins/create' element={<CreateAdminPage />} />
                 <Route path='*' element={<NotFoundPage />} />
             </Route>
 
