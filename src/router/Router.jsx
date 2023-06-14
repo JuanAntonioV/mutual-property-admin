@@ -12,6 +12,8 @@ import AdminDetailPage from '../pages/admin/AdminDetailPage';
 import CreateAdminPage from '../pages/admin/CreateAdminPage';
 import ForgotPasswordPage from '../pages/auth/forgot-password/ForgotPasswordPage';
 import CreatePropertyPage from '../pages/property/create/CreatePropertyPage';
+import ProjectPage from '../pages/projects/ProjectPage';
+import CreateProjectPage from '../pages/projects/create/CreateProjectPage';
 
 export default function Router() {
     return (
@@ -22,6 +24,12 @@ export default function Router() {
 
             <Route element={<MainLayout />}>
                 <Route path='/dashboard' element={<DashboardPage />} />
+
+                <Route path='/projects' element={<ProjectPage />} />
+                <Route
+                    path='/projects/create'
+                    element={<CreateProjectPage />}
+                />
 
                 <Route path='/property' element={<PropertyPage />} />
                 <Route

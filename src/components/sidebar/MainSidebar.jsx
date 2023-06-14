@@ -5,7 +5,7 @@ import LogoWhite from '@/assets/brand/logo-white.svg';
 import { MdSpaceDashboard, MdOutlineUnsubscribe } from 'react-icons/md';
 import { RiAdminLine } from 'react-icons/ri';
 import { TbBuildingCommunity } from 'react-icons/tb';
-import { BsMailbox } from 'react-icons/bs';
+import { BsBuildings, BsMailbox } from 'react-icons/bs';
 import { useEffect } from 'react';
 
 export default function MainSidebar() {
@@ -17,6 +17,11 @@ export default function MainSidebar() {
             name: 'Dashboard',
             icon: <MdSpaceDashboard size={28} color='#fff' />,
             path: '/dashboard',
+        },
+        {
+            name: 'Projects',
+            icon: <BsBuildings size={28} color='#fff' />,
+            path: '/projects',
         },
         {
             name: 'Property',

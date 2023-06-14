@@ -32,6 +32,7 @@ export default function CreatePropertyPage() {
         floors: 0,
         ownership: '',
         carport: 0,
+        building_condition: '',
         soil_size_width: '',
         soil_size_height: '',
         building_size_width: '',
@@ -75,66 +76,67 @@ export default function CreatePropertyPage() {
                     detail='Menu ini digunakan untuk membuat property baru'
                 />
 
-                <main>
-                    <form className='space-y-4'>
-                        <div className='form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Judul Properti{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <input
-                                name='title'
-                                type='text'
-                                className='input input-bordered'
-                                placeholder='Masukkan judul properti'
-                                required
-                                value={form.title}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className='form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Kategori Properti{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <select
-                                className='w-full select select-bordered'
-                                name='type'
-                                value={form.category}
-                                onChange={handleChange}
-                                disabled
-                            >
-                                <option value=''>Pilih kategori</option>
-                                <option value='baru'>Baru</option>
-                                <option value='disewa'>Disewa</option>
-                                <option value='dijual'>Dijual</option>
-                            </select>
-                        </div>
-                        <div className='form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Tipe Properti{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <select
-                                className='w-full select select-bordered'
-                                name='type'
-                                value={form.type}
-                                onChange={handleChange}
-                            >
-                                <option value=''>Pilih Tipe Property</option>
-                                <option value='rumah'>Rumah</option>
-                                <option value='ruko'>Ruko</option>
-                                <option value='gudang-pabrik'>Apartemen</option>
-                                <option value='komersial'>Komersial</option>
-                            </select>
-                        </div>
-                    </form>
+                <main className='space-y-4'>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Judul Properti{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <input
+                            name='title'
+                            type='text'
+                            className='input input-bordered'
+                            placeholder='Masukkan judul properti'
+                            required
+                            value={form.title}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Kategori Properti{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <select
+                            className='w-full select select-bordered'
+                            name='type'
+                            value={form.category}
+                            onChange={handleChange}
+                            disabled
+                        >
+                            <option value=''>Pilih kategori</option>
+                            <option value='baru'>Baru</option>
+                            <option value='disewa'>Disewa</option>
+                            <option value='dijual'>Dijual</option>
+                        </select>
+                    </div>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Tipe Properti{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <select
+                            className='w-full select select-bordered'
+                            name='type'
+                            value={form.type}
+                            onChange={handleChange}
+                        >
+                            <option value=''>Pilih Tipe Property</option>
+                            <option value='rumah'>Rumah</option>
+                            <option value='ruko'>Ruko</option>
+                            <option value='apartemen'>Apartemen</option>
+                            <option value='gudang-pabrik'>
+                                Gudang / Pabrik
+                            </option>
+                            <option value='komersial'>Komersial</option>
+                        </select>
+                    </div>
                 </main>
             </SectionWrapper>
 
@@ -372,6 +374,29 @@ export default function CreatePropertyPage() {
                             </div>
                         </div>
                     </div>
+                    <div className='w-full form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Kondisi Bangunan{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <input
+                            name='building_condition'
+                            type='text'
+                            className='w-full input input-bordered'
+                            placeholder='Masukkan jenis kepemilikan'
+                            required
+                            maxLength={5}
+                            value={form.building_condition}
+                            onChange={handleChange}
+                        />
+                        <label className='label'>
+                            <span className='label-text-alt'>
+                                Contoh: Siap Huni, Renovasi, dll
+                            </span>
+                        </label>
+                    </div>
                 </main>
             </SectionWrapper>
 
@@ -484,6 +509,49 @@ export default function CreatePropertyPage() {
                         </div>
                     </div>
                 </main>
+            </SectionWrapper>
+
+            <SectionWrapper>
+                <SectionHeader
+                    title='Foto Properti'
+                    detail='Menu ini digunakan untuk membuat property baru'
+                />
+
+                <main>
+                    <div className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'>
+                        <h2 className='text-2xl font-semibold text-center text-gray-700'>
+                            Drag and drop your file here
+                        </h2>
+                        <p className='text-center text-secondary'>
+                            or
+                            <span className='text-gray-700'> browse </span>
+                            to choose a file
+                        </p>
+                    </div>
+
+                    <div className='pt-8'>
+                        <p className='text-lg font-semibold text-gray-700'>
+                            Preview Foto
+                        </p>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-4'>
+                        <div className='bg-gray-200 h-52 rounded-xl'></div>
+                        <div className='bg-gray-200 h-52 rounded-xl'></div>
+                        <div className='bg-gray-200 h-52 rounded-xl'></div>
+                        <div className='bg-gray-200 h-52 rounded-xl'></div>
+                        <div className='bg-gray-200 h-52 rounded-xl'></div>
+                    </div>
+                </main>
+
+                <div className='flex justify-end gap-4 pt-8 pb-2 mt-10 border-t border-borderPrimary'>
+                    <button type='button' className='text-white btn btn-error'>
+                        Batalkan
+                    </button>
+                    <button type='submit' className='text-white btn btn-info'>
+                        Posting
+                    </button>
+                </div>
             </SectionWrapper>
         </form>
     );

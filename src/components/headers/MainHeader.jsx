@@ -10,7 +10,7 @@ export default function MainHeader() {
     };
 
     return (
-        <header className='w-full h-24 px-10 border-b bg-slate-50 border-borderPrimary xl:col-span-6 lg:col-span-4 flexBetween'>
+        <header className='w-full h-24 px-10 bg-white border-b border-borderPrimary xl:col-span-6 lg:col-span-4 flexBetween'>
             <div className='ml-auto'>
                 <div className='cursor-pointer dropdown dropdown-end'>
                     <div tabIndex={0} className='flex items-center gap-4'>
