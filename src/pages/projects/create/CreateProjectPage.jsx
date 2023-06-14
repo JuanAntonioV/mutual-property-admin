@@ -3,7 +3,15 @@ import SectionHeader from '../../../components/headers/SectionHeader';
 import SectionWrapper from '../../../components/wrappers/SectionWrapper';
 import { HiDocumentText } from 'react-icons/hi';
 
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { useState } from 'react';
+import { BsTelephoneFill } from 'react-icons/bs';
+import { IoLogoWhatsapp } from 'react-icons/io';
+
 export default function CreateProjectPage() {
+    const [editorData, setEditorData] = useState('');
+
     return (
         <form>
             <SectionWrapper className='mt-2'>
@@ -150,15 +158,147 @@ export default function CreateProjectPage() {
                             </span>
                         </label>
                     </div>
+                    <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
+                        <div className='w-full form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Upload Harga Proyek
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <input
+                                type='file'
+                                className='w-full file-input file-input-bordered'
+                                accept='image/jpeg, image/png, image/jpg'
+                            />
+                            <label className='label'>
+                                <span className='label-text-alt'>
+                                    Format: JPG, PNG, JPEG. Maksimal 5MB
+                                </span>
+                            </label>
+                        </div>
+                        <div className='w-full form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Upload Siteplan Proyek
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <input
+                                type='file'
+                                className='w-full file-input file-input-bordered'
+                                accept='image/jpeg, image/png, image/jpg'
+                            />
+                            <label className='label'>
+                                <span className='label-text-alt'>
+                                    Format: JPG, PNG, JPEG. Maksimal 5MB
+                                </span>
+                            </label>
+                        </div>
+                    </div>
 
                     <div>
                         <p className='pb-3 mt-10 mb-4 font-semibold border-b'>
-                            Detail Informasi
+                            Kontak Developer
                         </p>
                     </div>
 
-                    <div></div>
+                    <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
+                        <div className='w-full form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Nomor Telepon
+                                </span>
+                            </label>
+                            <div className='input-group'>
+                                <span>
+                                    <BsTelephoneFill
+                                        size={23}
+                                        color='#213D77'
+                                    />
+                                </span>
+                                <input
+                                    name='phoneNumber'
+                                    type='text'
+                                    placeholder='Masukkan nomor telepon developer'
+                                    className='w-full input input-bordered'
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className='w-full form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Nomor Whatsapp
+                                </span>
+                            </label>
+                            <div className='input-group'>
+                                <span>
+                                    <IoLogoWhatsapp size={23} color='#213D77' />
+                                </span>
+                                <input
+                                    name='phoneNumber'
+                                    type='text'
+                                    placeholder='Masukkan nomor whatsapp developer'
+                                    className='w-full input input-bordered'
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className='w-full form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Upload E-Brosur Proyek
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <input
+                            type='file'
+                            className='w-full file-input file-input-bordered'
+                            accept='application/pdf'
+                        />
+                        <label className='label'>
+                            <span className='label-text-alt'>
+                                Format: PDF. Maksimal 5MB
+                            </span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <p className='pb-3 mt-10 mb-4 font-semibold border-b'>
+                            Informasi Tambahan
+                        </p>
+                    </div>
+
+                    <div className='pt-4'>
+                        <CKEditor
+                            editor={ClassicEditor}
+                            data={editorData}
+                            onChange={(event, editor) => {
+                                const data = editor.getData();
+                                setEditorData(data);
+                            }}
+                        />
+                    </div>
                 </main>
+
+                <footer className='mt-16'>
+                    <div className='flex justify-end gap-4'>
+                        <button
+                            type='button'
+                            className='text-white btn btn-error'
+                        >
+                            Batalkan
+                        </button>
+                        <button
+                            type='submit'
+                            className='text-white btn btn-success'
+                        >
+                            Buat Project
+                        </button>
+                    </div>
+                </footer>
             </SectionWrapper>
         </form>
     );
