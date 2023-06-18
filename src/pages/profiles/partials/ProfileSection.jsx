@@ -1,41 +1,139 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
 
-import ProfilePlaceholder from '@/assets/img/profile.jpg';
+import useAuth from '../../../hooks/useAuth';
+import LazyImage from '../../../components/handler/LazyImage';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateProfileApi } from '../../../api/admin-api';
+import ErrorAlert from '../../../components/alerts/ErrorAlert';
+import SuccessAlert from '../../../components/alerts/SuccessAlert';
+import { PulseLoader } from 'react-spinners';
 
 export default function ProfileSection() {
+    const { token } = useAuth();
+
     const [isEditMode, setIsEditMode] = useState(false);
+    const [profileImg, setProfileImg] = useState(null);
     const [profileForm, setProfileForm] = useState({
-        picture: '',
+        photo: null,
         username: '',
-        fullName: '',
+        fullname: '',
         email: '',
-        phoneNumber: '',
+        phone: '',
     });
 
     const handleOnProfileFormChange = (e) => {
-        const { name, value } = e.target;
+        const { name, value, files } = e.target;
+
+        if (name === 'photo') {
+            setProfileForm((prev) => ({
+                ...prev,
+                [name]: files[0],
+            }));
+        }
 
         setProfileForm((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
+    const handleImageOnProfileFormChange = (e) => {
+        const { files } = e.target;
+        const uploaded = files[0];
+        setProfileImg(URL.createObjectURL(uploaded));
+        setProfileForm((prev) => ({
+            ...prev,
+            photo: uploaded,
+        }));
+    };
+
+    const clearForm = () => {
+        setProfileForm({
+            username: user.username,
+            fullname: user.detail.full_name,
+            email: user.email,
+            phone: user.detail.phone_number,
+        });
+    };
+
+    const queryClient = useQueryClient();
+
+    const {
+        mutate: updateProfileAction,
+        isLoading,
+        isError,
+        isSuccess,
+        error,
+        data: success,
+    } = useMutation((payload) => updateProfileApi(payload), {
+        onSuccess: () => {
+            queryClient.invalidateQueries('user');
+            setIsEditMode(false);
+        },
+    });
 
     const handleOnProfileFormSubmit = (e) => {
         e.preventDefault();
-        console.log('Profile Form', profileForm);
+
+        let data = {};
+
+        if (profileForm.photo != user.photo) {
+            data = {
+                full_name: profileForm.fullname,
+                phone_number: profileForm.phone,
+                email: profileForm.email,
+                photo: profileForm.photo,
+            };
+        } else {
+            data = {
+                full_name: profileForm.fullname,
+                phone_number: profileForm.phone,
+                email: profileForm.email,
+            };
+        }
+
+        console.log('formData', data);
+
+        updateProfileAction({ data, token });
     };
+
+    const { user } = useAuth();
+
+    useEffect(() => {
+        setProfileForm({
+            username: user.username,
+            fullname: user.detail.full_name,
+            photo: user.photo,
+            email: user.email,
+            phone: user.detail.phone_number,
+        });
+
+        setProfileImg(user.photo);
+
+        return () => {
+            setProfileForm({
+                picture: '',
+                username: '',
+                fullname: '',
+                email: '',
+                phone: '',
+            });
+            setProfileImg(null);
+        };
+    }, [user]);
 
     return (
         <SectionWrapper className='mt-2'>
             <SectionHeader title='Profile' detail='Detail informasi pengguna' />
 
             <main>
+                <ErrorAlert isError={isError} error={error} />
+                <SuccessAlert isSuccess={isSuccess} success={success} />
+
                 <div className='mb-6 avatar online'>
-                    <div className='rounded-full w-44'>
-                        <img src={ProfilePlaceholder} alt='Profile Picture' />
+                    <div className='rounded-full w-44 h-44'>
+                        <LazyImage src={profileImg} />
                     </div>
                 </div>
 
@@ -48,11 +146,12 @@ export default function ProfileSection() {
                             <span className='label-text'>Ganti Foto</span>
                         </label>
                         <input
-                            name='picture'
+                            name='photo'
                             type='file'
                             className='w-full file-input file-input-bordered file-input-info'
                             disabled={!isEditMode}
-                            onChange={handleOnProfileFormChange}
+                            accept='image/*'
+                            onChange={handleImageOnProfileFormChange}
                         />
                         <label className='label'>
                             <span className='label-text-alt'>
@@ -75,6 +174,7 @@ export default function ProfileSection() {
                             className='w-full input input-bordered'
                             required
                             disabled={!isEditMode}
+                            value={profileForm.username}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -83,12 +183,13 @@ export default function ProfileSection() {
                             <span className='label-text'>Nama Lengkap</span>
                         </label>
                         <input
-                            name='fullName'
+                            name='fullname'
                             type='text'
                             placeholder='Masukkan nama lengkap anda'
                             className='w-full input input-bordered'
                             required
                             disabled={!isEditMode}
+                            value={profileForm.fullname}
                             onChange={handleOnProfileFormChange}
                         />
                         <label className='label'>
@@ -115,6 +216,7 @@ export default function ProfileSection() {
                             className='w-full input input-bordered'
                             required
                             disabled={!isEditMode}
+                            value={profileForm.email}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -123,12 +225,13 @@ export default function ProfileSection() {
                             <span className='label-text'>Nomor Telepon</span>
                         </label>
                         <input
-                            name='phoneNumber'
+                            name='phone'
                             type='text'
                             placeholder='Masukkan nomor telepon anda'
                             className='w-full input input-bordered'
                             required
                             disabled={!isEditMode}
+                            value={profileForm.phone}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -139,15 +242,23 @@ export default function ProfileSection() {
                                 <button
                                     type='button'
                                     className='mt-6 text-white bg-bgNegative border-bgNegative btn btn-primary hover:bg-bgNegative'
-                                    onClick={() => setIsEditMode(false)}
+                                    onClick={() =>
+                                        setIsEditMode(false) || clearForm()
+                                    }
+                                    disabled={isLoading}
                                 >
-                                    <span>Batal</span>
+                                    Batal
                                 </button>
                                 <button
                                     type='submit'
                                     className='mt-6 text-white btn btn-primary bg-primary border-primary hover:bg-primary'
+                                    disabled={isLoading}
                                 >
-                                    <span>Simpan</span>
+                                    {isLoading ? (
+                                        <PulseLoader size={8} color='#fff' />
+                                    ) : (
+                                        'Simpan'
+                                    )}
                                 </button>
                             </>
                         ) : (

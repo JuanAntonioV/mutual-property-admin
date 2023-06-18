@@ -1,14 +1,27 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { PulseLoader } from 'react-spinners';
+import { usernameRegex } from '@/utils/helpers';
+import useAuth from '@/hooks/useAuth';
+import useLogin from '@/hooks/api/useLogin';
+import ErrorAlert from '@/components/alerts/ErrorAlert';
 
 export default function LoginPage() {
+    const navigate = useNavigate();
+    const { setUser, setToken } = useAuth();
+    const [formError, setFormError] = useState(null);
+
     const [formValues, setFormValues] = useState({
-        email: '',
+        username: '',
         password: '',
     });
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'username' && !value.match(usernameRegex)) {
+            return;
+        }
 
         setFormValues((prev) => ({
             ...prev,
@@ -16,9 +29,24 @@ export default function LoginPage() {
         }));
     };
 
+    const { loginAction, isLoading, isError, error } = useLogin({
+        successAction: (user, token) => {
+            setUser(user);
+            setToken(token);
+            navigate('/dashboard', { replace: true });
+        },
+    });
+
     const handleLoginSubmit = (e) => {
         e.preventDefault();
-        console.log('Login form submitted', formValues);
+        setFormError(null);
+
+        if (!formValues.username || !formValues.password) {
+            setFormError('Mohon isi semua field');
+            return;
+        }
+
+        loginAction(formValues);
     };
 
     return (
@@ -30,20 +58,23 @@ export default function LoginPage() {
                     </h1>
                 </header>
                 <main>
+                    <ErrorAlert isError={isError} error={error} />
+                    <ErrorAlert isError={formError} errorMessage={formError} />
                     <form className='space-y-4' onSubmit={handleLoginSubmit}>
                         <div className='form-control'>
                             <label className='label'>
                                 <span className='text-base label-text'>
-                                    Email
+                                    Username
                                 </span>
                             </label>
                             <input
-                                name='email'
+                                name='username'
                                 type='text'
-                                placeholder='Email Address'
+                                placeholder='Masukkan username'
                                 className='w-full input input-bordered'
-                                value={formValues.email}
+                                value={formValues.username}
                                 onChange={handleFormChange}
+                                required
                             />
                         </div>
                         <div className='form-control'>
@@ -59,6 +90,7 @@ export default function LoginPage() {
                                 className='w-full input input-bordered'
                                 value={formValues.password}
                                 onChange={handleFormChange}
+                                required
                             />
                         </div>
                         <div>
@@ -72,9 +104,14 @@ export default function LoginPage() {
                         <div>
                             <button
                                 type='submit'
-                                className='w-full mt-6 btn btn-neutral bg-primary hover:bg-primaryHover'
+                                className='btnPrimary'
+                                disabled={isLoading}
                             >
-                                Login
+                                {isLoading ? (
+                                    <PulseLoader size={8} color='#fff' />
+                                ) : (
+                                    'Login'
+                                )}
                             </button>
                         </div>
                     </form>

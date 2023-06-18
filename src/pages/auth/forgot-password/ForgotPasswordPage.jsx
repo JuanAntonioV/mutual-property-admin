@@ -1,12 +1,46 @@
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { forgotPasswordApi } from '@/api/auth-api';
+import { PulseLoader } from 'react-spinners';
+import ErrorAlert from '@/components/alerts/ErrorAlert';
+import CountdownTimer from '@/components/timers/CountdownTimer';
+import SuccessAlert from '../../../components/alerts/SuccessAlert';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
+    const [isSending, setIsSending] = useState(false);
+
+    const {
+        mutate: forgotPasswordAction,
+        isLoading,
+        isError,
+        isSuccess,
+        data: forgotPasswordResponse,
+        error,
+    } = useMutation((payload) => forgotPasswordApi(payload), {
+        onSuccess: (res) => {
+            if (res.code === 200) {
+                setIsSending(true);
+            }
+        },
+        onError: () => {
+            setIsSending(false);
+        },
+    });
+
+    useEffect(() => {
+        console.log(isSending);
+    }, [isSending]);
 
     const handleFormChange = (e) => {
         const { value } = e.target;
         setEmail(value);
+    };
+
+    const handleForgotPassword = (e) => {
+        e.preventDefault();
+        forgotPasswordAction({ email: email });
     };
 
     return (
@@ -19,7 +53,13 @@ export default function ForgotPasswordPage() {
                 </header>
 
                 <main>
-                    <form className='space-y-4'>
+                    <ErrorAlert isError={isError} error={error} />
+                    <SuccessAlert
+                        isSuccess={isSuccess}
+                        success={forgotPasswordResponse}
+                    />
+
+                    <form className='space-y-4' onSubmit={handleForgotPassword}>
                         <div className='form-control'>
                             <label className='label'>
                                 <span className='text-base label-text'>
@@ -33,21 +73,37 @@ export default function ForgotPasswordPage() {
                                 className='w-full input input-bordered'
                                 value={email}
                                 onChange={handleFormChange}
+                                required
                             />
                             <label className='label'>
-                                <span className='label-text-alt'>
-                                    Enter your email address and we will send
-                                    you a link to reset your password.
-                                </span>
+                                {isSending ? (
+                                    <CountdownTimer
+                                        resendAction={() =>
+                                            forgotPasswordAction({
+                                                email: email,
+                                            })
+                                        }
+                                    />
+                                ) : (
+                                    <span className='label-text-alt'>
+                                        Enter your email address and we will
+                                        send you a link to reset your password.
+                                    </span>
+                                )}
                             </label>
                         </div>
 
                         <div>
                             <button
                                 type='submit'
-                                className='w-full mt-6 btn btn-neutral bg-primary hover:bg-primaryHover'
+                                className='btnPrimary'
+                                disabled={isLoading || isSending}
                             >
-                                Forgot Password
+                                {isLoading ? (
+                                    <PulseLoader size={8} color='#fff' />
+                                ) : (
+                                    'Forgot Password'
+                                )}
                             </button>
                         </div>
                     </form>

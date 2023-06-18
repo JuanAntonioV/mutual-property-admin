@@ -3,9 +3,20 @@ import SectionHeader from '../components/headers/SectionHeader';
 import MainTable from '../components/tables/MainTable';
 import SectionWrapper from '../components/wrappers/SectionWrapper';
 import { AiOutlineFileSearch } from 'react-icons/ai';
+import { useQuery } from '@tanstack/react-query';
+import { getAllContacts } from '../api/contact-api';
+import { dateFormater, textDotsFormat } from '../utils/formaters';
 
 export default function ContactPage() {
     const [selectedData, setSelectedData] = useState(null);
+
+    const { data: contacts, isLoading: contactLoading } = useQuery(
+        ['contacts'],
+        () => getAllContacts(),
+        {
+            select: (data) => data.results,
+        }
+    );
 
     const columns = useMemo(
         () => [
@@ -39,29 +50,32 @@ export default function ContactPage() {
 
     const data = useMemo(() => {
         let count = 1;
-        return [
-            {
-                count: count++,
-                fullName: 'Rendy Artha P',
-                email: 'jiwarumah@gmail.com',
-                message: 'Saya tertarik dengan properti ini, bisa dihubungi?',
-                postedAt: '2021-08-20',
-                action: (
-                    <div className='flex flex-row gap-2'>
-                        <button
-                            className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '
-                            onClick={() => handleViewDetail(0)}
-                        >
-                            <AiOutlineFileSearch size={20} />
-                        </button>
-                    </div>
-                ),
-            },
-        ];
-    }, []);
+        return contacts
+            ? contacts?.map((contact) => {
+                  return {
+                      count: count++,
+                      fullName: contact.full_name,
+                      email: contact.email,
+                      message: textDotsFormat(contact.message, 50),
+                      postedAt: dateFormater(contact.posted_at),
+                      action: (
+                          <div className='flex flex-row gap-2'>
+                              <button
+                                  className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '
+                                  onClick={() => handleViewDetail(contact.id)}
+                              >
+                                  <AiOutlineFileSearch size={20} />
+                              </button>
+                          </div>
+                      ),
+                  };
+              })
+            : [];
+    }, [contacts]);
 
     const handleViewDetail = (id) => {
-        setSelectedData(data[id]);
+        const selectedContact = contacts.find((contact) => contact.id === id);
+        setSelectedData(selectedContact);
         window.contactDetailModal.showModal();
     };
 
@@ -79,9 +93,11 @@ export default function ContactPage() {
                         </button>
                     </header>
                     <main className='py-4'>
-                        <p>
-                            Saya tertarik dengan properti ini, bisa dihubungi?
+                        <p className='font-bold'>
+                            {selectedData?.full_name} - {selectedData?.email}
                         </p>
+
+                        <p className='mt-2'>{selectedData?.message}</p>
                     </main>
                     <footer className='modal-action'>
                         <button className='btn'>Close</button>
@@ -95,7 +111,11 @@ export default function ContactPage() {
                     detail='Semua list user yang mengirimkan pesan lewat contact form'
                 />
 
-                <MainTable data={data} columns={columns} />
+                <MainTable
+                    data={data}
+                    columns={columns}
+                    isLoading={contactLoading}
+                />
             </SectionWrapper>
         </>
     );

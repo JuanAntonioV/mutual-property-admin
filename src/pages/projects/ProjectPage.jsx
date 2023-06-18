@@ -4,6 +4,7 @@ import SectionWrapper from '../../components/wrappers/SectionWrapper';
 import { AiOutlineFileSearch } from 'react-icons/ai';
 import MainTable from '../../components/tables/MainTable';
 import { useNavigate } from 'react-router-dom';
+import { BiCopy } from 'react-icons/bi';
 
 export default function ProjectPage() {
     const navigate = useNavigate();
@@ -58,6 +59,14 @@ export default function ProjectPage() {
                 totalUnits: '30',
                 action: (
                     <div className='space-x-4'>
+                        <div
+                            className='tooltip tooltip-info tooltip-bottom'
+                            data-tip='Copy Project ID'
+                        >
+                            <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
+                                <BiCopy size={20} />
+                            </button>
+                        </div>
                         <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
                             <AiOutlineFileSearch size={20} />
                         </button>

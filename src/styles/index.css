@@ -79,6 +79,10 @@ body {
         @apply w-full px-4 py-3 border rounded-lg border-borderPrimary focus:outline-none focus:border-primary;
     }
 
+    .btnPrimary {
+        @apply w-full mt-6 btn btn-neutral bg-primary hover:bg-primaryHover disabled:bg-primaryDisabled disabled:text-white/60;
+    }
+
     .textLink {
         @apply text-sm text-link hover:underline md:text-base;
     }

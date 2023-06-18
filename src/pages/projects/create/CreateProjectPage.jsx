@@ -36,6 +36,30 @@ export default function CreateProjectPage() {
                             required
                         />
                     </div>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Harga Proyek{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <div className='input-group'>
+                            <span className='font-bold text-primary'>Rp</span>
+                            <input
+                                name='price'
+                                type='text'
+                                className='w-full input input-bordered'
+                                placeholder='Masukkan harga proyek'
+                                required
+                            />
+                        </div>
+                        <label className='label'>
+                            <span className='label-text-alt'>
+                                Harga ini akan ditampilkan pada informasi utama
+                                proyek
+                            </span>
+                        </label>
+                    </div>
 
                     <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
                         <div className='w-full form-control'>

@@ -1,9 +1,20 @@
+import { useQuery } from '@tanstack/react-query';
 import SectionHeader from '../../components/headers/SectionHeader';
 import MainTable from '../../components/tables/MainTable';
 import SectionWrapper from '../../components/wrappers/SectionWrapper';
 import { useMemo } from 'react';
+import { getAllSubscriptionApi } from '../../api/subscription-api';
+import { dateFormater } from '../../utils/formaters';
 
 export default function SubscriptionPage() {
+    const { data: subscriptions, isLoading: isSubscriptionsLoading } = useQuery(
+        ['subscriptions'],
+        () => getAllSubscriptionApi(),
+        {
+            select: (data) => data.results,
+        }
+    );
+
     const columns = useMemo(
         () => [
             {
@@ -24,14 +35,16 @@ export default function SubscriptionPage() {
 
     const data = useMemo(() => {
         let count = 1;
-        return [
-            {
-                count: count++,
-                email: 'jiwarumah@gmail.com',
-                postedAt: '2021-08-20',
-            },
-        ];
-    }, []);
+        return subscriptions
+            ? subscriptions?.map((item) => {
+                  return {
+                      count: count++,
+                      email: item.email,
+                      postedAt: dateFormater(item.subscribed_at),
+                  };
+              })
+            : [];
+    }, [subscriptions]);
 
     return (
         <>
@@ -41,7 +54,11 @@ export default function SubscriptionPage() {
                     detail='Semua list user yang melakukan subscription'
                 />
 
-                <MainTable data={data} columns={columns} />
+                <MainTable
+                    data={data}
+                    columns={columns}
+                    isLoading={isSubscriptionsLoading}
+                />
             </SectionWrapper>
         </>
     );

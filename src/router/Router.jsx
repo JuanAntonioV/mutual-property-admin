@@ -14,36 +14,74 @@ import ForgotPasswordPage from '../pages/auth/forgot-password/ForgotPasswordPage
 import CreatePropertyPage from '../pages/property/create/CreatePropertyPage';
 import ProjectPage from '../pages/projects/ProjectPage';
 import CreateProjectPage from '../pages/projects/create/CreateProjectPage';
+import {
+    AuthenticatedMiddleware,
+    GuestMiddleware,
+} from './middleware/AuthMiddleware';
+import useAuth from '../hooks/useAuth';
+import ResetPasswordPage from '../pages/auth/reset-password/ResetPasswordPage';
 
 export default function Router() {
+    const { isLoading, isAuthLoading, user } = useAuth();
+
     return (
         <Routes>
-            <Route path='/' element={<Navigate to='/dashboard' />} />
-            <Route path='/login' element={<LoginPage />} />
-            <Route path='/forgot-password' element={<ForgotPasswordPage />} />
-
-            <Route element={<MainLayout />}>
-                <Route path='/dashboard' element={<DashboardPage />} />
-
-                <Route path='/projects' element={<ProjectPage />} />
+            <Route
+                element={
+                    <GuestMiddleware
+                        isLoading={isLoading}
+                        isAuthLoading={isAuthLoading}
+                        user={user}
+                    />
+                }
+            >
+                <Route path='/login' element={<LoginPage />} />
                 <Route
-                    path='/projects/create'
-                    element={<CreateProjectPage />}
+                    path='/forgot-password'
+                    element={<ForgotPasswordPage />}
                 />
+                <Route path='/reset-password' element={<ResetPasswordPage />} />
+            </Route>
 
-                <Route path='/property' element={<PropertyPage />} />
-                <Route
-                    path='/property/create/:category'
-                    element={<CreatePropertyPage />}
-                />
+            <Route
+                element={
+                    <AuthenticatedMiddleware
+                        isAuthLoading={isAuthLoading}
+                        isLoading={isLoading}
+                        user={user}
+                    />
+                }
+            >
+                <Route path='/' element={<Navigate to='/dashboard' />} />
+                <Route element={<MainLayout />}>
+                    <Route path='/dashboard' element={<DashboardPage />} />
 
-                <Route path='/subscriptions' element={<SubscriptionPage />} />
-                <Route path='/contacts' element={<ContactPage />} />
-                <Route path='/profile' element={<ProfilePage />} />
-                <Route path='/admins' element={<AdminPage />} />
-                <Route path='/admins/:id' element={<AdminDetailPage />} />
-                <Route path='/admins/create' element={<CreateAdminPage />} />
-                <Route path='*' element={<NotFoundPage />} />
+                    <Route path='/projects' element={<ProjectPage />} />
+                    <Route
+                        path='/projects/create'
+                        element={<CreateProjectPage />}
+                    />
+
+                    <Route path='/property' element={<PropertyPage />} />
+                    <Route
+                        path='/property/create/:category'
+                        element={<CreatePropertyPage />}
+                    />
+
+                    <Route
+                        path='/subscriptions'
+                        element={<SubscriptionPage />}
+                    />
+                    <Route path='/contacts' element={<ContactPage />} />
+                    <Route path='/profile' element={<ProfilePage />} />
+                    <Route path='/admins' element={<AdminPage />} />
+                    <Route path='/admins/:id' element={<AdminDetailPage />} />
+                    <Route
+                        path='/admins/create'
+                        element={<CreateAdminPage />}
+                    />
+                    <Route path='*' element={<NotFoundPage />} />
+                </Route>
             </Route>
 
             <Route path='*' element={<NotFoundPage />} />

@@ -3,30 +3,65 @@ import SectionHeader from '@/components/headers/SectionHeader';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import { FcInfo } from 'react-icons/fc';
 import { useNavigate } from 'react-router-dom';
+import ErrorAlert from '../../components/alerts/ErrorAlert';
+import useAuth from '../../hooks/useAuth';
+import { PulseLoader } from 'react-spinners';
 
 export default function CreateAdminPage() {
     const navigate = useNavigate();
+    const [formError, setFormError] = useState('');
 
-    const [profileForm, setProfileForm] = useState({
+    const [adminForm, setAdminForm] = useState({
         username: '',
-        fullName: '',
+        fullname: '',
         email: '',
         phoneNumber: '',
         role: '',
+        is_active: true,
+        password: '',
+        passwordConfirmation: '',
     });
 
     const handleOnProfileFormChange = (e) => {
         const { name, value } = e.target;
 
-        setProfileForm((prev) => ({
+        // create regex for the usename (only alphanumeric and underscore) and allow null
+        const usernameRegex = /^[a-zA-Z0-9_]*$/;
+
+        // create regex for the fullname (only alphabet) and allow null and space
+        const fullnameRegex = /^[a-zA-Z ]*$/;
+
+        if (
+            (name === 'username' && !value.match(usernameRegex)) ||
+            (name === 'fullname' && !value.match(fullnameRegex))
+        ) {
+            return;
+        }
+
+        setAdminForm((prev) => ({
             ...prev,
             [name]: value,
         }));
     };
 
-    const handleOnProfileFormSubmit = (e) => {
+    const { isLoading, isError, error, createUser } = useAuth();
+
+    const handleOnProfileFormSubmit = async (e) => {
         e.preventDefault();
-        console.log('Profile Form', profileForm);
+
+        if (
+            adminForm.password !== adminForm.passwordConfirmation ||
+            adminForm.password === '' ||
+            adminForm.passwordConfirmation === ''
+        ) {
+            setFormError('Password dan konfirmasi password tidak sama');
+            return;
+        }
+
+        await createUser({
+            ...adminForm,
+            successAction: () => navigate('/admins'),
+        });
     };
     return (
         <SectionWrapper>
@@ -36,6 +71,8 @@ export default function CreateAdminPage() {
             />
 
             <main>
+                <ErrorAlert isError={formError} errorMessage={formError} />
+                <ErrorAlert isError={isError} errorMessage={error} />
                 <form
                     className='space-y-4'
                     onSubmit={handleOnProfileFormSubmit}
@@ -50,6 +87,7 @@ export default function CreateAdminPage() {
                             placeholder='Masukkan username anda'
                             className='w-full input input-bordered'
                             required
+                            value={adminForm.username}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -58,11 +96,12 @@ export default function CreateAdminPage() {
                             <span className='label-text'>Nama Lengkap</span>
                         </label>
                         <input
-                            name='fullName'
+                            name='fullname'
                             type='text'
                             placeholder='Masukkan nama lengkap anda'
                             className='w-full input input-bordered'
                             required
+                            value={adminForm.fullname}
                             onChange={handleOnProfileFormChange}
                         />
                         <label className='label'>
@@ -84,10 +123,11 @@ export default function CreateAdminPage() {
                         </label>
                         <input
                             name='email'
-                            type='text'
+                            type='email'
                             placeholder='Masukkan email anda'
                             className='w-full input input-bordered'
                             required
+                            value={adminForm.email}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -101,6 +141,7 @@ export default function CreateAdminPage() {
                             placeholder='Masukkan nomor telepon anda'
                             className='w-full input input-bordered'
                             required
+                            value={adminForm.phoneNumber}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -119,12 +160,17 @@ export default function CreateAdminPage() {
                                 </div>
                             </div>
                         </label>
-                        <select className='select select-bordered'>
-                            <option disabled selected>
+                        <select
+                            className='select select-bordered'
+                            name='role'
+                            defaultValue={''}
+                            onChange={handleOnProfileFormChange}
+                        >
+                            <option value={''} disabled>
                                 Pilih Jabatan
                             </option>
-                            <option>Admin</option>
-                            <option>Marketing</option>
+                            <option value={'admin'}>Admin</option>
+                            <option value={'marketing'}>Marketing</option>
                         </select>
                         <label className='label'>
                             <span className='label-text-alt'>
@@ -150,6 +196,7 @@ export default function CreateAdminPage() {
                             className='w-full input input-bordered'
                             required
                             min={6}
+                            value={adminForm.password}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -165,6 +212,7 @@ export default function CreateAdminPage() {
                             placeholder='Masukkan ulang password'
                             className='w-full input input-bordered'
                             required
+                            value={adminForm.passwordConfirmation}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -174,14 +222,20 @@ export default function CreateAdminPage() {
                             type='button'
                             className='mt-6 btn'
                             onClick={() => navigate('/admins')}
+                            disabled={isLoading}
                         >
                             <span>Batal</span>
                         </button>
                         <button
                             type='submit'
                             className='mt-6 text-white btn btn-success hover:bg-success/70 border-success hover:border-success/70'
+                            disabled={isLoading}
                         >
-                            <span>Buat</span>
+                            {isLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                'Simpan'
+                            )}
                         </button>
                     </div>
                 </form>

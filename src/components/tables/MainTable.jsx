@@ -10,8 +10,15 @@ import TableFilter from './TableFilter';
 
 import { MdAdd } from 'react-icons/md';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
+import TableLoading from './TableLoading';
 
-export default function MainTable({ columns, data, addAction, noFilter }) {
+export default function MainTable({
+    columns,
+    data,
+    addAction,
+    noFilter,
+    isLoading,
+}) {
     const {
         getTableProps,
         getTableBodyProps,
@@ -88,7 +95,7 @@ export default function MainTable({ columns, data, addAction, noFilter }) {
                     ))}
                 </thead>
                 <tbody {...getTableBodyProps()}>
-                    {page.length > 0 ? (
+                    {!isLoading && page.length > 0 ? (
                         page.map((row, i) => {
                             prepareRow(row);
                             return (
@@ -106,6 +113,10 @@ export default function MainTable({ columns, data, addAction, noFilter }) {
                                 </tr>
                             );
                         })
+                    ) : isLoading ? (
+                        <tr className='relative'>
+                            <TableLoading />
+                        </tr>
                     ) : (
                         <tr className='relative'>
                             <TableNoData />

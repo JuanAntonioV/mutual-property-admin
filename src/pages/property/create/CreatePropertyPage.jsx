@@ -137,6 +137,55 @@ export default function CreatePropertyPage() {
                             <option value='komersial'>Komersial</option>
                         </select>
                     </div>
+                    {category === 'baru' && (
+                        <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        ID Proyek{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <span className='font-bold input-group-addon text-primary'>
+                                        ID
+                                    </span>
+                                    <input
+                                        name='project_id'
+                                        type='text'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan ID Proyek'
+                                        required
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <label className='label'>
+                                    <span className='label-text-alt'>
+                                        Silahkan copy atau masukkan ID proyek
+                                        dari menu proyek.
+                                    </span>
+                                </label>
+                            </div>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Upload Floorplan{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <input
+                                    type='file'
+                                    className='w-full file-input file-input-bordered'
+                                    accept='image/jpeg, image/png, image/jpg'
+                                />
+                                <label className='label'>
+                                    <span className='label-text-alt'>
+                                        Format: JPG, PNG, JPEG. Maksimal 5MB
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    )}
                 </main>
             </SectionWrapper>
 
@@ -153,7 +202,7 @@ export default function CreatePropertyPage() {
                                 <span className='text-red-500'>*</span>
                             </span>
                         </label>
-                        <label className='input-group'>
+                        <div className='input-group'>
                             <span className='font-bold text-primary'>Rp</span>
                             <input
                                 name='price'
@@ -164,7 +213,7 @@ export default function CreatePropertyPage() {
                                 value={form.price}
                                 onChange={handleChange}
                             />
-                        </label>
+                        </div>
                     </div>
                     <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
                         <div className='w-full form-control'>

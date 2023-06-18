@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
+import { useMutation } from '@tanstack/react-query';
+import { changePasswordApi } from '@/api/admin-api';
+import useAuth from '@/hooks/useAuth';
+import { PulseLoader } from 'react-spinners';
+import SuccessAlert from '@/components/alerts/SuccessAlert';
+import ErrorAlert from '@/components/alerts/ErrorAlert';
 
 export default function ChangePasswordSection() {
+    const { token } = useAuth();
     const [changePasswordForm, setChangePasswordForm] = useState({
         oldPassword: '',
         newPassword: '',
@@ -17,9 +24,23 @@ export default function ChangePasswordSection() {
         }));
     };
 
+    const {
+        mutate: changePasswordAction,
+        isLoading,
+        isSuccess,
+        isError,
+        error,
+        data: success,
+    } = useMutation((payload) => changePasswordApi(payload));
+
     const handleOnPasswordFormSubmit = (e) => {
         e.preventDefault();
-        console.log('Change Password Form', changePasswordForm);
+        const data = {
+            old_password: changePasswordForm.oldPassword,
+            new_password: changePasswordForm.newPassword,
+        };
+
+        changePasswordAction({ data, token });
     };
 
     return (
@@ -30,6 +51,8 @@ export default function ChangePasswordSection() {
             />
 
             <main>
+                <ErrorAlert isError={isError} error={error} />
+                <SuccessAlert isSuccess={isSuccess} success={success} />
                 <form
                     className='space-y-4'
                     onSubmit={handleOnPasswordFormSubmit}
@@ -44,6 +67,8 @@ export default function ChangePasswordSection() {
                             placeholder='Masukkan password lama anda'
                             className='w-full input input-bordered'
                             required
+                            minLength={6}
+                            value={changePasswordForm.oldPassword}
                             onChange={handleOnPasswordFormChange}
                         />
                     </div>
@@ -57,6 +82,8 @@ export default function ChangePasswordSection() {
                             placeholder='Masukkan password baru anda'
                             className='w-full input input-bordered'
                             required
+                            minLength={6}
+                            value={changePasswordForm.newPassword}
                             onChange={handleOnPasswordFormChange}
                         />
                     </div>
@@ -64,7 +91,7 @@ export default function ChangePasswordSection() {
                     <div>
                         <button
                             type='submit'
-                            className='mt-6 text-white btn btn-primary bg-primary border-primary hover:bg-primary'
+                            className='mt-6 btnPrimary'
                             disabled={
                                 changePasswordForm.oldPassword === '' ||
                                 changePasswordForm.newPassword === '' ||
@@ -72,7 +99,11 @@ export default function ChangePasswordSection() {
                                 changePasswordForm.newPassword.length <= 6
                             }
                         >
-                            <span>Ganti</span>
+                            {isLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                'Ganti'
+                            )}
                         </button>
                     </div>
                 </form>

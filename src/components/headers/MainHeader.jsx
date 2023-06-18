@@ -1,13 +1,34 @@
 import DefaultProfileImage from '@/assets/img/profile.jpg';
 import { Link, useNavigate } from 'react-router-dom';
+import useAuth from '@/hooks/useAuth';
+import { textCapitalize } from '@/utils/helpers';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { logoutApi } from '@/api/auth-api';
+import { PulseLoader } from 'react-spinners';
 
 export default function MainHeader() {
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
-    };
+    const { user, token, setToken, setUser } = useAuth();
+
+    const queryClient = useQueryClient();
+    const { mutate: logoutAction, isLoading } = useMutation(
+        (token) => logoutApi(token),
+        {
+            onSuccess: (res) => {
+                if (res.code === 200) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('account');
+                    setUser(null);
+                    setToken('');
+                    navigate('/login', { replace: true });
+                    queryClient.resetQueries('user');
+                }
+            },
+        }
+    );
+
+    const handleLogout = () => logoutAction(token);
 
     return (
         <header className='w-full h-24 px-10 bg-white border-b border-borderPrimary xl:col-span-6 lg:col-span-4 flexBetween'>
@@ -20,8 +41,12 @@ export default function MainHeader() {
                             </div>
                         </div>
                         <div>
-                            <p className='text-base font-bold'>John Doe</p>
-                            <p className='text-sm text-gray-500'>Admin</p>
+                            <p className='text-base font-bold'>
+                                {user && user.detail.full_name}
+                            </p>
+                            <p className='text-sm text-gray-500'>
+                                {user && textCapitalize(user.detail.position)}
+                            </p>
                         </div>
                     </div>
 
@@ -35,8 +60,16 @@ export default function MainHeader() {
                             </Link>
                         </li>
                         <li className='pt-2 mt-2 border-t'>
-                            <button className='py-2' onClick={handleLogout}>
-                                Logout
+                            <button
+                                disabled={isLoading}
+                                className='py-2'
+                                onClick={handleLogout}
+                            >
+                                {isLoading ? (
+                                    <PulseLoader size={8} color={'#213D77'} />
+                                ) : (
+                                    'Logout'
+                                )}
                             </button>
                         </li>
                     </ul>
