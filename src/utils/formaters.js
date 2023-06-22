@@ -10,7 +10,7 @@ export const textDotsFormat = (text, maxLength) => {
     }
 };
 
-export const dateFormater = (date, prefix) => {
+export const dateFormater = (date, type) => {
     if (date) {
         const newDate = new Date(date);
         const month = newDate.getMonth() + 1;
@@ -46,7 +46,7 @@ export const dateFormater = (date, prefix) => {
             'Des',
         ];
 
-        if (prefix === 'short') {
+        if (type === 'short') {
             return `${day} ${monthNameShort[month - 1]} ${year}`;
         }
 

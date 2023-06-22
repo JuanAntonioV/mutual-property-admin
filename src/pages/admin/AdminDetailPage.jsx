@@ -3,7 +3,7 @@ import AdminChangePasswordSection from './partials/AdminChangePasswordSection';
 import AdminProfileSection from './partials/AdminProfileSection';
 import { getAdminDetailApi } from '../../api/admin-api';
 import { useParams } from 'react-router-dom';
-import { PulseLoader } from 'react-spinners';
+import ScreenLoading from '../../components/handler/ScreenLoading';
 
 export default function AdminDetailPage() {
     const { id } = useParams();
@@ -16,13 +16,7 @@ export default function AdminDetailPage() {
         }
     );
 
-    if (isLoading)
-        return (
-            <div className='flex-col h-full gap-6 flexCenter'>
-                <PulseLoader size={18} color='#213D77' />
-                <p className='text-secondary'>Memuat ...</p>
-            </div>
-        );
+    if (isLoading) return <ScreenLoading />;
 
     return (
         <>

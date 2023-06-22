@@ -9,14 +9,20 @@ import { useState } from 'react';
 import { BsEnvelopeFill, BsTelephoneFill } from 'react-icons/bs';
 import { IoLogoWhatsapp } from 'react-icons/io';
 import { toast } from 'react-toastify';
-import { useMutation } from '@tanstack/react-query';
-import { createProjectApi } from '../../../api/project-api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    getProjectDetailApi,
+    updateProjectApi,
+} from '../../../api/project-api';
 import { PulseLoader } from 'react-spinners';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatRupiah, parseRupiah } from '../../../utils/helpers';
 import LazyImage from '../../../components/handler/LazyImage';
+import ScreenLoading from '../../../components/handler/ScreenLoading';
+import { useEffect } from 'react';
 
-export default function CreateProjectPage() {
+export default function EditProjectPage() {
+    const { id } = useParams();
     const navigate = useNavigate();
     const [editorData, setEditorData] = useState('');
     const [logoImg, setLogoImg] = useState('');
@@ -26,6 +32,7 @@ export default function CreateProjectPage() {
         price: '',
         address: '',
         map_url: '',
+        status: 0,
         area: '',
         total_unit: '',
         certificate: '',
@@ -98,18 +105,61 @@ export default function CreateProjectPage() {
         }));
     };
 
-    const { mutate: createProject, isLoading: isCreatingProject } = useMutation(
-        (payload) => createProjectApi(payload),
+    const queryClient = useQueryClient();
+
+    const { data: projectData, isLoading: isProjectLoading } = useQuery(
+        ['projectDetail'],
+        () => getProjectDetailApi(id),
         {
+            select: (res) => res.results,
             onSuccess: () => {
-                toast.success('Project berhasil dibuat');
-                navigate('/projects');
-            },
-            onError: () => {
-                toast.error('Project gagal dibuat');
+                queryClient.invalidateQueries('projects');
+                queryClient.invalidateQueries(['projectDetail']);
             },
         }
     );
+
+    useEffect(() => {
+        if (projectData) {
+            const priceFormated = formatRupiah(`${projectData?.started_price}`);
+
+            setProjectForm((prev) => ({
+                ...prev,
+                name: projectData?.name,
+                email: projectData?.email,
+                price: priceFormated,
+                status: projectData?.status ? 1 : 0,
+                address: projectData?.address,
+                map_url: projectData?.map_url,
+                area: projectData?.detail.area,
+                total_unit: projectData?.detail.total_unit,
+                certificate: projectData?.detail.certificate,
+                facilities: projectData?.detail.facilities,
+                phone_number: projectData?.phone_number,
+                whatsapp_number: projectData?.whatsapp_number,
+                brochure_file: projectData?.detail.brochure_file,
+                price_list_image: projectData?.detail.price_list_image,
+                side_plan_image: projectData?.detail.side_plan_image,
+                logo_image: projectData?.logo,
+            }));
+
+            setLogoImg(projectData?.logo);
+            projectData?.description && setEditorData(projectData?.description);
+        }
+    }, [projectData]);
+
+    const { mutate: updateProject, isLoading: isUpdatingProjectLoading } =
+        useMutation((payload) => updateProjectApi(payload), {
+            onSuccess: () => {
+                toast.success('Project berhasil diupdate');
+                queryClient.invalidateQueries('projects');
+                queryClient.invalidateQueries(['projectDetail']);
+                navigate('/projects');
+            },
+            onError: () => {
+                toast.error('Project gagal diupdate');
+            },
+        });
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -117,9 +167,10 @@ export default function CreateProjectPage() {
         const payload = {
             name: projectForm.name,
             email: projectForm.email,
-            started_price: parseRupiah(projectForm.price),
+            started_price: parseRupiah(projectForm.price) || 0,
             address: projectForm.address,
             map_url: projectForm.map_url,
+            status: projectForm.status,
             area: projectForm.area,
             total_unit: projectForm.total_unit,
             certificate: projectForm.certificate,
@@ -133,27 +184,55 @@ export default function CreateProjectPage() {
             description: editorData,
         };
 
-        createProject(payload);
+        updateProject({ projectId: id, data: payload });
     };
+
+    if (isProjectLoading) return <ScreenLoading />;
 
     return (
         <form onSubmit={handleSubmit}>
             <SectionWrapper className='mt-2'>
                 <SectionHeader
-                    title='Create Project'
-                    detail='Menu ini digunakan untuk membuat project baru.'
+                    title='Edit Project'
+                    detail='Menu ini digunakan untuk merubah data project'
                 />
 
-                <div className='mb-6 avatar'>
-                    <div className='border rounded-lg w-60 aspect-auto border-borderPrimary'>
-                        <LazyImage
-                            src={logoImg}
-                            className='!object-cover !w-60 !h-60'
-                        />
+                {logoImg && (
+                    <div className='mb-6 avatar'>
+                        <div className='border rounded-lg w-60 aspect-auto border-borderPrimary'>
+                            <LazyImage
+                                src={logoImg}
+                                className='!object-cover !w-60 !h-60'
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <main className='space-y-2'>
+                    <div className='w-full form-control'>
+                        <label className='label'>
+                            <span className='label-text'>Status</span>
+                        </label>
+                        <select
+                            name='status'
+                            className='select select-bordered'
+                            disabled={isUpdatingProjectLoading}
+                            value={projectForm.status}
+                            onChange={handleInputChange}
+                        >
+                            <option value={''} disabled>
+                                Pilih Status
+                            </option>
+                            <option value={1}>Aktif</option>
+                            <option value={0}>Tidak Aktif</option>
+                        </select>
+                        <label className='label'>
+                            <span className='label-text-alt'>
+                                Dengan mengubah status menjadi tidak aktif, maka
+                                user tidak dapat mengakses aplikasi
+                            </span>
+                        </label>
+                    </div>
                     <div className='form-control'>
                         <label className='label'>
                             <span className='label-text'>
@@ -183,7 +262,7 @@ export default function CreateProjectPage() {
                             type='file'
                             onChange={handleImageOnLogoFormChange}
                             className='w-full file-input file-input-bordered'
-                            accept={'.jpg, .png, .jpeg'}
+                            accept={'image/*'}
                         />
                         <label className='label'>
                             <span className='label-text-alt'>
@@ -379,7 +458,7 @@ export default function CreateProjectPage() {
                                 type='file'
                                 onChange={onChangeImage}
                                 className='w-full file-input file-input-bordered'
-                                accept={'.jpg, .png, .jpeg'}
+                                accept='image/jpeg, image/png, image/jpg'
                             />
                             <label className='label'>
                                 <span className='label-text-alt'>
@@ -532,12 +611,12 @@ export default function CreateProjectPage() {
                         <button
                             type='submit'
                             className='text-white btn btn-success'
-                            disabled={isCreatingProject}
+                            disabled={isUpdatingProjectLoading}
                         >
-                            {isCreatingProject ? (
+                            {isUpdatingProjectLoading ? (
                                 <PulseLoader size={10} color='#fff' />
                             ) : (
-                                'Buat Project'
+                                'Simpan'
                             )}
                         </button>
                     </div>

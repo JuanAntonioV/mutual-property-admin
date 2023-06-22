@@ -5,23 +5,36 @@ import { AiOutlineFileSearch } from 'react-icons/ai';
 import MainTable from '../../components/tables/MainTable';
 import { useNavigate } from 'react-router-dom';
 import { BiCopy } from 'react-icons/bi';
+import { useQuery } from '@tanstack/react-query';
+import { getAllProjectApi } from '../../api/project-api';
+import StatusBadge from '../../components/badges/StatusBadge';
+import { dateFormater, textDotsFormat } from '../../utils/formaters';
+import { toast } from 'react-toastify';
 
 export default function ProjectPage() {
     const navigate = useNavigate();
 
+    const { data: projectData, isLoading: isProjectLoading } = useQuery(
+        ['projects'],
+        getAllProjectApi,
+        {
+            select: (res) => res.results,
+        }
+    );
+
     const columns = useMemo(
         () => [
             {
-                Header: '#',
-                accessor: 'count',
+                Header: 'ID Project',
+                accessor: 'id',
             },
             {
                 Header: 'Nama Developer',
-                accessor: 'developerName',
+                accessor: 'name',
             },
             {
                 Header: 'Alamat Developer',
-                accessor: 'developerAddress',
+                accessor: 'address',
             },
             {
                 Header: 'Total Unit',
@@ -44,37 +57,44 @@ export default function ProjectPage() {
     );
 
     const data = useMemo(() => {
-        let count = 1;
-        return [
-            {
-                count: count++,
-                developerName: 'Rumah dijual di Jakarta',
-                status: (
-                    <span className='px-4 py-3 text-white badge bg-success'>
-                        Aktif
-                    </span>
-                ),
-                developerAddress: 'Jl. Jendral Sudirman No. 1',
-                postedAt: '2021-08-20',
-                totalUnits: '30',
-                action: (
-                    <div className='space-x-4'>
-                        <div
-                            className='tooltip tooltip-info tooltip-bottom'
-                            data-tip='Copy Project ID'
-                        >
-                            <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
-                                <BiCopy size={20} />
-                            </button>
-                        </div>
-                        <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
-                            <AiOutlineFileSearch size={20} />
-                        </button>
-                    </div>
-                ),
-            },
-        ];
-    }, []);
+        return projectData
+            ? projectData.map((project) => {
+                  return {
+                      id: project.id,
+                      name: project.name,
+                      status: <StatusBadge status={project.status} />,
+                      address: textDotsFormat(project.address, 36),
+                      postedAt: dateFormater(project.created_at),
+                      totalUnits: project.detail.total_unit,
+                      action: (
+                          <div className='space-x-4'>
+                              <div
+                                  className='tooltip tooltip-info tooltip-bottom'
+                                  data-tip='Copy Project ID'
+                                  onClick={() =>
+                                      navigator.clipboard.writeText(
+                                          project.id
+                                      ) && toast.success('Project ID di copy')
+                                  }
+                              >
+                                  <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit'>
+                                      <BiCopy size={20} />
+                                  </button>
+                              </div>
+                              <button
+                                  className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit'
+                                  onClick={() =>
+                                      navigate(`/projects/${project.id}`)
+                                  }
+                              >
+                                  <AiOutlineFileSearch size={20} />
+                              </button>
+                          </div>
+                      ),
+                  };
+              })
+            : [];
+    }, [projectData]);
 
     const handleAddNewProject = () => {
         navigate('create');
@@ -92,6 +112,7 @@ export default function ProjectPage() {
                     data={data}
                     columns={columns}
                     addAction={handleAddNewProject}
+                    isLoading={isProjectLoading}
                 />
             </SectionWrapper>
         </>

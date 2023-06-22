@@ -14,6 +14,7 @@ import ForgotPasswordPage from '../pages/auth/forgot-password/ForgotPasswordPage
 import CreatePropertyPage from '../pages/property/create/CreatePropertyPage';
 import ProjectPage from '../pages/projects/ProjectPage';
 import CreateProjectPage from '../pages/projects/create/CreateProjectPage';
+import ProjectDetailPage from '../pages/projects/edit/ProjectDetailPage';
 import {
     AuthenticatedMiddleware,
     GuestMiddleware,
@@ -57,6 +58,10 @@ export default function Router() {
                     <Route path='/dashboard' element={<DashboardPage />} />
 
                     <Route path='/projects' element={<ProjectPage />} />
+                    <Route
+                        path='/projects/:id'
+                        element={<ProjectDetailPage />}
+                    />
                     <Route
                         path='/projects/create'
                         element={<CreateProjectPage />}

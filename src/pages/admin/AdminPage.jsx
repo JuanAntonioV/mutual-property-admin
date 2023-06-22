@@ -11,6 +11,7 @@ import { getAllAdmins, nonActiveAdminApi } from '../../api/admin-api';
 import useAuth from '../../hooks/useAuth';
 import { MoonLoader, PulseLoader } from 'react-spinners';
 import { toast } from 'react-toastify';
+import StatusBadge from '../../components/badges/StatusBadge';
 
 export default function AdminPage() {
     const navigate = useNavigate();
@@ -84,15 +85,7 @@ export default function AdminPage() {
                       count: count++,
                       fullName: admin.detail.full_name,
                       email: admin.email,
-                      status: (
-                          <span
-                              className={`px-4 py-3 text-white badge ${
-                                  admin.status ? 'bg-success' : 'bg-error'
-                              }`}
-                          >
-                              {admin.status ? 'Aktif' : 'Nonaktif'}
-                          </span>
-                      ),
+                      status: <StatusBadge status={admin.status} />,
                       joinedAt: dateFormater(
                           admin.detail.recruitment_date || Date.now(),
                           true
