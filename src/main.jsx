@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 
 import './styles/index.css';
 import 'react-lazy-load-image-component/src/effects/blur.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 import App from './pages/App';
 import { BrowserRouter } from 'react-router-dom';

@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import SectionHeader from '@/components/headers/SectionHeader';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 
-import ProfilePlaceholder from '@/assets/img/profile.jpg';
-
 import { FcInfo } from 'react-icons/fc';
+import LazyImage from '../../../components/handler/LazyImage';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateAdminProfileApi } from '../../../api/admin-api';
+import { PulseLoader } from 'react-spinners';
+import { toast } from 'react-toastify';
 
-export default function AdminProfileSection() {
+export default function AdminProfileSection({ data }) {
     const [isEditMode, setIsEditMode] = useState(false);
     const [profileForm, setProfileForm] = useState({
         picture: '',
@@ -16,6 +19,8 @@ export default function AdminProfileSection() {
         email: '',
         phoneNumber: '',
         role: '',
+        recruitmentDate: '',
+        status: 0,
     });
 
     const handleOnProfileFormChange = (e) => {
@@ -27,12 +32,65 @@ export default function AdminProfileSection() {
         }));
     };
 
+    useEffect(() => {
+        setProfileForm({
+            picture: data?.photo,
+            username: data?.username,
+            fullName: data?.detail.full_name,
+            email: data?.email,
+            phoneNumber: data?.detail.phone_number,
+            role: data?.detail.position,
+            recruitmentDate: data?.detail?.recruitment_date,
+            status: data?.status,
+        });
+
+        return () =>
+            setProfileForm({
+                picture: '',
+                username: '',
+                fullName: '',
+                email: '',
+                phoneNumber: '',
+                role: '',
+                recruitmentDate: '',
+                status: false,
+            });
+    }, [data]);
+
+    const queryClient = useQueryClient();
+
+    const {
+        mutate: updateAdminDetailAction,
+        isLoading: isUpdateAdminDetailLoading,
+    } = useMutation((payload) => updateAdminProfileApi(payload), {
+        onSuccess: () => {
+            queryClient.invalidateQueries('adminDetail');
+            toast.success('Berhasil merubah data staff');
+            setIsEditMode(false);
+        },
+        onError: () => {
+            toast.error('Gagal merubah data staff');
+        },
+    });
+
     const handleOnProfileFormSubmit = (e) => {
         e.preventDefault();
-        console.log('Profile Form', profileForm);
+
+        const payload = {
+            full_name: profileForm.fullName,
+            username: profileForm.username,
+            recruitment_date: profileForm.recruitmentDate,
+            position: profileForm.role,
+            phone_number: profileForm.phoneNumber,
+            email: profileForm.email,
+            status: profileForm.status,
+        };
+
+        updateAdminDetailAction({ adminId: data?.id, data: payload });
     };
+
     return (
-        <SectionWrapper>
+        <SectionWrapper className={'mt-2'}>
             <SectionHeader
                 title='Detail Admin'
                 detail='Menu ini digunakan untuk melihat detail admin'
@@ -40,9 +98,10 @@ export default function AdminProfileSection() {
 
             <main>
                 <div className='mb-6 avatar online'>
-                    <div className='rounded-full w-44'>
-                        <img src={ProfilePlaceholder} alt='Profile Picture' />
-                    </div>
+                    <LazyImage
+                        src={data?.photo}
+                        className='!rounded-full !w-44'
+                    />
                 </div>
 
                 <form
@@ -59,7 +118,8 @@ export default function AdminProfileSection() {
                             placeholder='Masukkan username anda'
                             className='w-full input input-bordered'
                             required
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            value={profileForm.username}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -73,7 +133,8 @@ export default function AdminProfileSection() {
                             placeholder='Masukkan nama lengkap anda'
                             className='w-full input input-bordered'
                             required
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            value={profileForm.fullName}
                             onChange={handleOnProfileFormChange}
                         />
                         <label className='label'>
@@ -87,14 +148,18 @@ export default function AdminProfileSection() {
                             <span className='label-text'>Status</span>
                         </label>
                         <select
+                            name='status'
                             className='select select-bordered'
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            defaultValue={''}
+                            value={profileForm.status}
+                            onChange={handleOnProfileFormChange}
                         >
-                            <option disabled selected>
+                            <option value={''} disabled>
                                 Pilih Status
                             </option>
-                            <option>Aktif</option>
-                            <option>Tidak Aktif</option>
+                            <option value={1}>Aktif</option>
+                            <option value={0}>Tidak Aktif</option>
                         </select>
                         <label className='label'>
                             <span className='label-text-alt'>
@@ -120,7 +185,8 @@ export default function AdminProfileSection() {
                             placeholder='Masukkan email anda'
                             className='w-full input input-bordered'
                             required
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            value={profileForm.email}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -134,7 +200,8 @@ export default function AdminProfileSection() {
                             placeholder='Masukkan nomor telepon anda'
                             className='w-full input input-bordered'
                             required
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            value={profileForm.phoneNumber}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -143,12 +210,13 @@ export default function AdminProfileSection() {
                             <span className='label-text'>Tanggal Masuk</span>
                         </label>
                         <input
-                            name='joinDate'
+                            name='recruitmentDate'
                             type='date'
                             placeholder='Masukkan tanggal masuk'
                             className='w-full input input-bordered'
                             required
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            value={profileForm.recruitmentDate}
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
@@ -168,14 +236,18 @@ export default function AdminProfileSection() {
                             </div>
                         </label>
                         <select
+                            name='position'
                             className='select select-bordered'
-                            disabled={!isEditMode}
+                            disabled={!isEditMode || isUpdateAdminDetailLoading}
+                            defaultValue={''}
+                            value={profileForm.role}
+                            onChange={handleOnProfileFormChange}
                         >
-                            <option disabled selected>
+                            <option value={''} disabled>
                                 Pilih Jabatan
                             </option>
-                            <option>Admin</option>
-                            <option>Marketing</option>
+                            <option value={'admin'}>Admin</option>
+                            <option value={'marketing'}>Marketing</option>
                         </select>
                         <label className='label'>
                             <span className='label-text-alt'>
@@ -197,8 +269,13 @@ export default function AdminProfileSection() {
                                 <button
                                     type='submit'
                                     className='mt-6 text-white btn btn-primary bg-primary border-primary hover:bg-primary'
+                                    disabled={isUpdateAdminDetailLoading}
                                 >
-                                    <span>Simpan</span>
+                                    {isUpdateAdminDetailLoading ? (
+                                        <PulseLoader size={8} color='#fff' />
+                                    ) : (
+                                        'Simpan'
+                                    )}
                                 </button>
                             </>
                         ) : (
@@ -207,7 +284,7 @@ export default function AdminProfileSection() {
                                 className='mt-6 text-white bg-green-500 border-green-500 btn btn-primary hover:bg-green-500 hover:border-green-500'
                                 onClick={() => setIsEditMode(true)}
                             >
-                                <span>Ubah</span>
+                                Ubah
                             </button>
                         )}
                     </div>

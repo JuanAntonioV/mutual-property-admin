@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import SectionHeader from '../../components/headers/SectionHeader';
 import MainTable from '../../components/tables/MainTable';
 import SectionWrapper from '../../components/wrappers/SectionWrapper';
@@ -6,12 +6,16 @@ import { AiOutlineFileSearch } from 'react-icons/ai';
 import { TiWarningOutline } from 'react-icons/ti';
 import { useNavigate } from 'react-router-dom';
 import { dateFormater } from '../../utils/formaters';
-import { useQuery } from '@tanstack/react-query';
-import { getAllAdmins } from '../../api/admin-api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getAllAdmins, nonActiveAdminApi } from '../../api/admin-api';
+import useAuth from '../../hooks/useAuth';
+import { MoonLoader, PulseLoader } from 'react-spinners';
+import { toast } from 'react-toastify';
 
 export default function AdminPage() {
     const navigate = useNavigate();
-    // const [selectedAdminId, setSelectedAdminId] = useState('');
+    const { user } = useAuth();
+    const [selectedAdmin, setSelectedAdmin] = useState('');
 
     const { data: admins, isLoading: adminsLoading } = useQuery(
         ['admins'],
@@ -51,15 +55,25 @@ export default function AdminPage() {
         []
     );
 
-    const handleNonactiveAdmin = (id) => {
-        console.log('nonactive admin');
-        // setSelectedAdminId(id);
+    const queryClient = useQueryClient();
+
+    const { mutate: nonActiveAdminAction, isLoading: isNonActiveAdminLoading } =
+        useMutation((payload) => nonActiveAdminApi(payload), {
+            onSuccess: (data) => {
+                window.nonactiveConfirmation.close();
+                queryClient.invalidateQueries('admins');
+                toast.success(data?.message);
+            },
+        });
+
+    const handleNonactiveAdmin = (admin) => {
+        setSelectedAdmin(admin);
         window.nonactiveConfirmation.showModal();
     };
 
-    const handleViewDetail = (id) => {
-        // setSelectedAdminId(id);
-        navigate(`/admins/${id}`);
+    const handleViewDetail = (admin) => {
+        setSelectedAdmin(admin);
+        navigate(`/admins/${admin?.id}`);
     };
 
     const data = useMemo(() => {
@@ -83,23 +97,42 @@ export default function AdminPage() {
                           admin.detail.recruitment_date || Date.now(),
                           true
                       ),
-                      action: (
-                          <div className='flex flex-row gap-2'>
-                              <button
-                                  className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit'
-                                  onClick={() => handleViewDetail(admin.id)}
-                              >
-                                  <AiOutlineFileSearch size={20} />
-                              </button>
+                      action:
+                          admin.id === user.id ? (
+                              <p className='text-sm text-gray-400'>
+                                  Tidak ada action
+                              </p>
+                          ) : (
+                              <div className='flex flex-row gap-2'>
+                                  <button
+                                      className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit'
+                                      onClick={() => handleViewDetail(admin)}
+                                  >
+                                      <AiOutlineFileSearch size={20} />
+                                  </button>
 
-                              <button
-                                  className='text-white btn btn-outline btn-sm bg-bgNegative hover:bg-bgNegative border-bgNegative hover:border-inherit'
-                                  onClick={() => handleNonactiveAdmin(admin.id)}
-                              >
-                                  <TiWarningOutline size={20} />
-                              </button>
-                          </div>
-                      ),
+                                  <button
+                                      className={`text-white btn btn-outline btn-sm hover:border-inherit ${
+                                          admin.status
+                                              ? 'bg-bgNegative hover:bg-bgNegative border-bgNegative'
+                                              : 'bg-success hover:bg-success/80 border-success'
+                                      }`}
+                                      onClick={() =>
+                                          handleNonactiveAdmin(admin)
+                                      }
+                                      disabled={isNonActiveAdminLoading}
+                                  >
+                                      {isNonActiveAdminLoading ? (
+                                          <MoonLoader
+                                              size={22}
+                                              color='#213D77'
+                                          />
+                                      ) : (
+                                          <TiWarningOutline size={20} />
+                                      )}
+                                  </button>
+                              </div>
+                          ),
                   };
               })
             : [];
@@ -120,16 +153,41 @@ export default function AdminPage() {
                         >
                             ✕
                         </button>
-                        <h3 className='text-lg font-bold'>Nonaktifkan Admin</h3>
+                        <h3 className='text-lg font-bold'>
+                            {selectedAdmin?.status ? 'Nonaktifkan' : 'Aktifkan'}{' '}
+                            Admin
+                        </h3>
                     </header>
                     <main className='py-4'>
-                        <p>Apakah anda yakin ingin menonaktifkan admin ini?</p>
+                        <p>
+                            Apakah anda yakin ingin{' '}
+                            {selectedAdmin?.status
+                                ? 'menonaktifkan'
+                                : 'mengaktifkan'}{' '}
+                            admin ini?
+                        </p>
                     </main>
                     <footer>
                         <div className='modal-action'>
                             <button className='btn'>Batal</button>
-                            <button className='text-white btn btn-error bg-bgNegative'>
-                                Nonaktifkan
+                            <button
+                                className={`text-white btn ${
+                                    selectedAdmin?.status
+                                        ? 'btn-error'
+                                        : 'btn-success'
+                                }`}
+                                disabled={isNonActiveAdminLoading}
+                                onClick={() =>
+                                    nonActiveAdminAction(selectedAdmin?.id)
+                                }
+                            >
+                                {isNonActiveAdminLoading ? (
+                                    <PulseLoader size={10} color='#fff' />
+                                ) : selectedAdmin?.status ? (
+                                    'Nonaktifkan'
+                                ) : (
+                                    'Aktifkan'
+                                )}
                             </button>
                         </div>
                     </footer>

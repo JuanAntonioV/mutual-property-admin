@@ -26,13 +26,9 @@ export const logoutApi = async (token) => {
     }
 };
 
-export const getUserDataApi = async (token) => {
+export const getUserDataApi = async () => {
     try {
-        const res = await api.get('auth/me', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const res = await api.get('auth/me');
         return res.data;
     } catch (err) {
         throw new Error(err.response.data.message);

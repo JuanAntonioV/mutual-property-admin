@@ -93,8 +93,6 @@ export default function ProfileSection() {
             };
         }
 
-        console.log('formData', data);
-
         updateProfileAction({ data, token });
     };
 
@@ -133,7 +131,10 @@ export default function ProfileSection() {
 
                 <div className='mb-6 avatar online'>
                     <div className='rounded-full w-44 h-44'>
-                        <LazyImage src={profileImg} />
+                        <LazyImage
+                            src={profileImg}
+                            className='!w-44 !h-44 !rounded-full'
+                        />
                     </div>
                 </div>
 

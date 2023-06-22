@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import ErrorAlert from '../../components/alerts/ErrorAlert';
 import useAuth from '../../hooks/useAuth';
 import { PulseLoader } from 'react-spinners';
+import { useMutation } from '@tanstack/react-query';
+import { createAdminApi } from '../../api/admin-api';
 
 export default function CreateAdminPage() {
     const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function CreateAdminPage() {
         fullname: '',
         email: '',
         phoneNumber: '',
+        recruitmentDate: '',
         role: '',
         is_active: true,
         password: '',
@@ -44,9 +47,16 @@ export default function CreateAdminPage() {
         }));
     };
 
-    const { isLoading, isError, error, createUser } = useAuth();
+    const { isError, error } = useAuth();
 
-    const handleOnProfileFormSubmit = async (e) => {
+    const { mutate: createAdmin, isLoading: isCreateAdminLoading } =
+        useMutation((payload) => createAdminApi(payload), {
+            onSuccess: () => {
+                navigate('/admins');
+            },
+        });
+
+    const handleOnProfileFormSubmit = (e) => {
         e.preventDefault();
 
         if (
@@ -58,9 +68,15 @@ export default function CreateAdminPage() {
             return;
         }
 
-        await createUser({
-            ...adminForm,
-            successAction: () => navigate('/admins'),
+        createAdmin({
+            username: adminForm.username,
+            full_name: adminForm.fullname,
+            email: adminForm.email,
+            recruitment_date: adminForm.recruitmentDate,
+            phone_number: adminForm.phoneNumber,
+            position: adminForm.role,
+            password: adminForm.password,
+            password_confirmation: adminForm.passwordConfirmation,
         });
     };
     return (
@@ -145,6 +161,19 @@ export default function CreateAdminPage() {
                             onChange={handleOnProfileFormChange}
                         />
                     </div>
+                    <div className='w-full form-control'>
+                        <label className='label'>
+                            <span className='label-text'>Tanggal Masuk</span>
+                        </label>
+                        <input
+                            name='recruitmentDate'
+                            type='date'
+                            className='w-full input input-bordered'
+                            required
+                            value={adminForm.recruitmentDate}
+                            onChange={handleOnProfileFormChange}
+                        />
+                    </div>
 
                     <div className='w-full form-control'>
                         <label className='label'>
@@ -222,16 +251,16 @@ export default function CreateAdminPage() {
                             type='button'
                             className='mt-6 btn'
                             onClick={() => navigate('/admins')}
-                            disabled={isLoading}
+                            disabled={isCreateAdminLoading}
                         >
                             <span>Batal</span>
                         </button>
                         <button
                             type='submit'
                             className='mt-6 text-white btn btn-success hover:bg-success/70 border-success hover:border-success/70'
-                            disabled={isLoading}
+                            disabled={isCreateAdminLoading}
                         >
-                            {isLoading ? (
+                            {isCreateAdminLoading ? (
                                 <PulseLoader size={8} color='#fff' />
                             ) : (
                                 'Simpan'

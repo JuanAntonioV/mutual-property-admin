@@ -1,10 +1,10 @@
-import DefaultProfileImage from '@/assets/img/profile.jpg';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
 import { textCapitalize } from '@/utils/helpers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logoutApi } from '@/api/auth-api';
 import { PulseLoader } from 'react-spinners';
+import LazyImage from '../handler/LazyImage';
 
 export default function MainHeader() {
     const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function MainHeader() {
                     <div tabIndex={0} className='flex items-center gap-4'>
                         <div className='avatar'>
                             <div className='rounded-full w-11 ring ring-link ring-offset-base-100 ring-offset-1'>
-                                <img src={DefaultProfileImage} alt='Profile' />
+                                <LazyImage src={user?.photo} />
                             </div>
                         </div>
                         <div>

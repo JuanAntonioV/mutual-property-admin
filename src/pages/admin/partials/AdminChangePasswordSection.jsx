@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
+import { useMutation } from '@tanstack/react-query';
+import { changeAdminPasswordApi } from '../../../api/admin-api';
+import { PulseLoader } from 'react-spinners';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import ErrorAlert from '../../../components/alerts/ErrorAlert';
 
 export default function AdminChangePasswordSection() {
+    const { id } = useParams();
     const [changePasswordForm, setChangePasswordForm] = useState({
-        oldPassword: '',
-        newPassword: '',
+        password: '',
+        passwordConfirmation: '',
     });
+    const [formError, setFormError] = useState('');
 
     const handleOnPasswordFormChange = (e) => {
         const { name, value } = e.target;
@@ -17,9 +25,37 @@ export default function AdminChangePasswordSection() {
         }));
     };
 
+    const { mutate: changeAdminPasswordAction, isLoading } = useMutation(
+        (payload) => changeAdminPasswordApi(payload),
+        {
+            onSuccess: () => {
+                toast.success('Berhasil merubah password');
+            },
+            onError: () => {
+                toast.error('Gagal merubah password');
+            },
+        }
+    );
+
     const handleOnPasswordFormSubmit = (e) => {
         e.preventDefault();
-        console.log('Change Password Form', changePasswordForm);
+        setFormError('');
+
+        if (
+            changePasswordForm.password !=
+            changePasswordForm.passwordConfirmation
+        ) {
+            setFormError('Konfirmasi password tidak sama');
+            return;
+        }
+
+        const payload = {
+            password: changePasswordForm.password,
+            password_confirmation: changePasswordForm.passwordConfirmation,
+        };
+
+        changeAdminPasswordAction({ adminId: id, data: payload });
+        setFormError('');
     };
     return (
         <SectionWrapper className='mt-2'>
@@ -29,34 +65,42 @@ export default function AdminChangePasswordSection() {
             />
 
             <main>
+                <ErrorAlert isError={!!formError} errorMessage={formError} />
+
                 <form
                     className='space-y-4'
                     onSubmit={handleOnPasswordFormSubmit}
                 >
                     <div className='w-full form-control'>
                         <label className='label'>
-                            <span className='label-text'>Password lama</span>
+                            <span className='label-text'>Password baru</span>
                         </label>
                         <input
-                            name='oldPassword'
+                            name='password'
                             type='password'
-                            placeholder='Masukkan password lama anda'
+                            placeholder='Masukkan password baru'
                             className='w-full input input-bordered'
                             required
+                            value={changePasswordForm.password}
                             onChange={handleOnPasswordFormChange}
+                            disabled={isLoading}
                         />
                     </div>
                     <div className='w-full form-control'>
                         <label className='label'>
-                            <span className='label-text'>Password baru</span>
+                            <span className='label-text'>
+                                Konfirmasi password
+                            </span>
                         </label>
                         <input
-                            name='newPassword'
+                            name='passwordConfirmation'
                             type='password'
-                            placeholder='Masukkan password baru anda'
+                            placeholder='Masukkan ulang password'
                             className='w-full input input-bordered'
                             required
+                            value={changePasswordForm.passwordConfirmation}
                             onChange={handleOnPasswordFormChange}
+                            disabled={isLoading}
                         />
                     </div>
 
@@ -65,13 +109,20 @@ export default function AdminChangePasswordSection() {
                             type='submit'
                             className='mt-6 text-white btn btn-primary bg-primary border-primary hover:bg-primary'
                             disabled={
-                                changePasswordForm.oldPassword === '' ||
-                                changePasswordForm.newPassword === '' ||
-                                changePasswordForm.oldPassword.length <= 6 ||
-                                changePasswordForm.newPassword.length <= 6
+                                changePasswordForm.password === '' ||
+                                changePasswordForm.passwordConfirmation ===
+                                    '' ||
+                                changePasswordForm.password.length <= 6 ||
+                                changePasswordForm.passwordConfirmation
+                                    .length <= 6 ||
+                                isLoading
                             }
                         >
-                            <span>Ganti</span>
+                            {isLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                'Ganti'
+                            )}
                         </button>
                     </div>
                 </form>
