@@ -4,11 +4,23 @@ import SectionWrapper from '../../components/wrappers/SectionWrapper';
 import SectionHeader from '../../components/headers/SectionHeader';
 import MainTable from '../../components/tables/MainTable';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getAllPropertyApi } from '../../api/property-api';
+import { dateFormater, textDotsFormat } from '../../utils/formaters';
+import CategoryBadge from '../../components/badges/CategoryBadge';
 
 export default function PropertyPage() {
     const navigate = useNavigate();
     const [category, setCategory] = useState('');
     const [error, setError] = useState(false);
+
+    const { data: propertyData, isLoading: isPropertyLoading } = useQuery(
+        ['property'],
+        getAllPropertyApi,
+        {
+            select: (res) => res.results,
+        }
+    );
 
     const columns = useMemo(
         () => [
@@ -46,51 +58,37 @@ export default function PropertyPage() {
 
     const data = useMemo(() => {
         let count = 1;
-        return [
-            {
-                count: count++,
-                propertyName: 'Rumah dijual di Jakarta',
-                category: (
-                    <span className='px-4 py-3 text-white badge bg-success'>
-                        Baru
-                    </span>
-                ),
-                type: 'Rumah',
-                postedAt: '2021-08-20',
-                marketingName: 'Joseph michael',
-                action: (
-                    <div className='space-x-4'>
-                        <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
-                            <AiOutlineFileSearch size={20} />
-                        </button>
-                    </div>
-                ),
-            },
-            {
-                count: count++,
-                propertyName: 'Rumah dijual di Medan ',
-                category: (
-                    <span className='px-4 py-3 text-white badge bg-info'>
-                        Dijual
-                    </span>
-                ),
-                type: 'Ruko',
-                postedAt: '2022-08-20',
-                marketingName: 'Joseph michael',
-                action: (
-                    <div className='space-x-4'>
-                        <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
-                            <AiOutlineFileSearch size={20} />
-                        </button>
-                    </div>
-                ),
-            },
-        ];
-    }, []);
+        return propertyData
+            ? propertyData.map((item) => {
+                  return {
+                      count: count++,
+                      propertyName: textDotsFormat(item?.title, 20),
+                      category: (
+                          <CategoryBadge
+                              status={item?.category.id}
+                              statusText={item?.category?.name}
+                          />
+                      ),
+                      type: item?.sub_category?.name,
+                      postedAt: dateFormater(item?.created_at),
+                      marketingName: item?.staff_details?.full_name,
+                      action: (
+                          <div className='space-x-4'>
+                              <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
+                                  <AiOutlineFileSearch size={20} />
+                              </button>
+                          </div>
+                      ),
+                  };
+              })
+            : [];
+    }, [propertyData]);
 
     const handleAddNewProperty = () => {
         window.stepOne.showModal();
     };
+
+    console.log(propertyData);
 
     const handleSubmitCategory = () => {
         setError(false);
