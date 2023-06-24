@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
@@ -9,27 +9,40 @@ import { FaBed, FaBath } from 'react-icons/fa';
 import { TbStairs } from 'react-icons/tb';
 import { HiDocumentText } from 'react-icons/hi';
 import { RiCarWashingFill } from 'react-icons/ri';
+import { useMutation } from '@tanstack/react-query';
+import { createPropertyApi } from '../../../api/property-api';
+import { PulseLoader } from 'react-spinners';
+import useStore from '../../../hooks/useStore';
+import { toast } from 'react-toastify';
+import { parseRupiah } from '../../../utils/helpers';
+import ErrorAlert from '../../../components/alerts/ErrorAlert';
 
 export default function CreatePropertyPage() {
     const { category } = useParams();
     const navigate = useNavigate();
-
-    const categoryList = ['baru', 'dijual', 'disewa'];
+    const { categories } = useStore();
 
     useEffect(() => {
-        if (!categoryList.includes(category)) navigate('/property');
-    }, [category, categoryList]);
+        if (
+            !categories &&
+            !categories?.find((item) => item.name.toLowerCase() === category)
+        ) {
+            navigate('/property');
+        }
+    }, [categories, category, navigate]);
 
     const [form, setForm] = useState({
         title: '',
         price: '',
         category: '',
-        type: '',
+        subCategory: '',
+        isSold: 0,
         address: '',
         location_link: '',
         beds: 0,
         baths: 0,
         floors: 0,
+        project_id: '',
         ownership: '',
         carport: 0,
         building_condition: '',
@@ -38,38 +51,263 @@ export default function CreatePropertyPage() {
         building_size_width: '',
         building_size_height: '',
         electricity_meter: 0,
+        building_direction: '',
+        floorplan: null,
+        images: [],
+        facilities: [],
     });
+
+    const [formFacilities, setFormFacilities] = useState('');
+
+    const [formPicture, setFormPicture] = useState([]);
+    const fileInputRef = useRef(null);
+
+    const fileInputWrapperRef = useRef(null);
 
     useEffect(() => {
         setForm((prev) => ({
             ...prev,
-            category: category,
+            category: categories?.find(
+                (item) => item.name.toLowerCase() === category
+            )?.id,
         }));
-    }, [category]);
+    }, [category, categories]);
+
+    const handlePictureChange = (e) => {
+        const { files } = e.target;
+
+        const selectedFilesArray = Array.from(files);
+
+        if (selectedFilesArray.length > 10) {
+            toast.error('Maksimal 10 gambar');
+            return;
+        }
+
+        setForm((prev) => ({
+            ...prev,
+            images: selectedFilesArray,
+        }));
+
+        const imagesArray = selectedFilesArray.map((file) => {
+            return URL.createObjectURL(file);
+        });
+
+        setFormPicture((prev) => prev.concat(imagesArray));
+
+        // FOR BUG IN CHROME
+        e.target.value = '';
+    };
+
+    const handleDeletePicture = (index) => {
+        setForm((prev) => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index),
+        }));
+
+        setFormPicture((prev) => prev.filter((_, i) => i !== index));
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        const regex = /^[a-zA-Z0-9.,-]*$/;
+        const regex = /^[a-zA-Z0-9.]*$/;
 
-        const formated = formatRupiah(value);
+        if (name === 'price' && value.match(regex)) {
+            const formated = formatRupiah(value);
 
-        if (value.match(regex)) {
-            if (name === 'price') {
-                setForm({
-                    ...form,
-                    [name]: formated,
-                });
-            } else {
-                setForm({
-                    ...form,
-                    [name]: value,
-                });
-            }
+            setForm({
+                ...form,
+                [name]: formated,
+            });
+        } else {
+            setForm({
+                ...form,
+                [name]: value,
+            });
         }
     };
 
+    const handleFloorplanChange = (e) => {
+        const { files } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            floorplan: files[0],
+        }));
+    };
+
+    const handleAddFacilities = (e) => {
+        e.preventDefault();
+
+        if (formFacilities === '') {
+            toast.error('Fasilitas tidak boleh kosong');
+            return;
+        }
+
+        if (form.facilities.includes(formFacilities)) {
+            toast.error('Fasilitas sudah ada');
+            return;
+        }
+
+        setForm((prev) => ({
+            ...prev,
+            facilities: [...prev.facilities, formFacilities],
+        }));
+
+        setFormFacilities('');
+    };
+
+    const handleDeleteFacilities = (index) => {
+        setForm((prev) => ({
+            ...prev,
+            facilities: prev.facilities.filter((_, i) => i !== index),
+        }));
+    };
+
+    const handleFacilitiesChange = (e) => {
+        const { value } = e.target;
+        setFormFacilities(value);
+    };
+
+    const buildingDirectionList = [
+        {
+            id: 1,
+            name: 'Utara',
+        },
+        {
+            id: 2,
+            name: 'Selatan',
+        },
+        {
+            id: 3,
+            name: 'Timur',
+        },
+        {
+            id: 4,
+            name: 'Barat',
+        },
+        {
+            id: 5,
+            name: 'Timur Laut',
+        },
+        {
+            id: 6,
+            name: 'Tenggara',
+        },
+        {
+            id: 7,
+            name: 'Barat Daya',
+        },
+        {
+            id: 8,
+            name: 'Barat Laut',
+        },
+    ];
+
+    const {
+        mutate: createProperty,
+        isLoading: isCreatePropertyLoading,
+        isError: isCreatePropertyError,
+        error: createPropertyError,
+    } = useMutation(createPropertyApi, {
+        onSuccess: () => {
+            toast.success('Berhasil membuat properti baru');
+            navigate(`/property`);
+        },
+        onError: () => {
+            toast.error('Gagal membuat properti baru');
+        },
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        let type = '';
+
+        switch (form.category) {
+            case 1:
+            case 2:
+                type = 'product';
+                break;
+            case 3:
+                type = 'productProject';
+                break;
+            default:
+                type = null;
+                break;
+        }
+
+        if (type === null) {
+            toast.error('Tipe properti tidak ditemukan');
+            return;
+        }
+
+        const soilArea = form.soil_size_width * form.soil_size_height;
+        const soilSize = `${form.soil_size_width} x ${form.soil_size_height} m`;
+        const buildingArea =
+            form.building_size_width * form.building_size_height;
+        const buildingSize = `${form.building_size_width} x ${form.building_size_height} m`;
+
+        let payload = {};
+
+        if (type == 'productProject') {
+            payload = {
+                type: type,
+                title: form.title,
+                category_id: form.category,
+                sub_category_id: form.subCategory,
+                address: form.address,
+                is_sold: form.isSold,
+                price: parseRupiah(form.price),
+                map_url: form.location_link,
+                bedroom: form.beds,
+                bathroom: form.baths,
+                garage: form.carport,
+                floor: form.floors,
+                certificate: form.ownership,
+                soil_area: soilSize,
+                land_area: soilArea,
+                building_area: buildingArea,
+                building_size: buildingSize,
+                building_condition: form.building_condition,
+                building_direction: form.building_direction,
+                electricity_capacity: form.electricity_meter,
+                images: form.images,
+                project_id: form.project_id,
+                floor_plan_image: form.floorplan,
+                facilities: form.facilities,
+            };
+        } else {
+            payload = {
+                type: type,
+                title: form.title,
+                category_id: form.category,
+                sub_category_id: form.subCategory,
+                address: form.address,
+                is_sold: form.isSold,
+                price: parseRupiah(form.price),
+                map_url: form.location_link,
+                bedroom: form.beds,
+                bathroom: form.baths,
+                garage: form.carport,
+                floor: form.floors,
+                certificate: form.ownership,
+                soil_area: soilSize,
+                land_area: soilArea,
+                building_area: buildingArea,
+                building_size: buildingSize,
+                building_condition: form.building_condition,
+                building_direction: form.building_direction,
+                electricity_capacity: form.electricity_meter,
+                images: form.images,
+                facilities: form.facilities,
+            };
+        }
+
+        createProperty(payload);
+    };
+
     return (
-        <form>
+        <form onSubmit={handleSubmit}>
             <SectionWrapper className={'mt-0 pb-10'}>
                 <SectionHeader
                     title='Create Property'
@@ -77,6 +315,11 @@ export default function CreatePropertyPage() {
                 />
 
                 <main className='space-y-4'>
+                    <ErrorAlert
+                        isError={isCreatePropertyError}
+                        error={createPropertyError}
+                    />
+
                     <div className='form-control'>
                         <label className='label'>
                             <span className='label-text'>
@@ -109,9 +352,11 @@ export default function CreatePropertyPage() {
                             disabled
                         >
                             <option value=''>Pilih kategori</option>
-                            <option value='baru'>Baru</option>
-                            <option value='disewa'>Disewa</option>
-                            <option value='dijual'>Dijual</option>
+                            {categories?.map((cat, i) => (
+                                <option key={i} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className='form-control'>
@@ -123,18 +368,36 @@ export default function CreatePropertyPage() {
                         </label>
                         <select
                             className='w-full select select-bordered'
-                            name='type'
-                            value={form.type}
+                            name='subCategory'
+                            value={form.subCategory}
                             onChange={handleChange}
                         >
                             <option value=''>Pilih Tipe Property</option>
-                            <option value='rumah'>Rumah</option>
-                            <option value='ruko'>Ruko</option>
-                            <option value='apartemen'>Apartemen</option>
-                            <option value='gudang-pabrik'>
-                                Gudang / Pabrik
-                            </option>
-                            <option value='komersial'>Komersial</option>
+                            {categories
+                                ?.find((cat) => cat.id === form.category)
+                                ?.sub_categories?.map((subCat, i) => (
+                                    <option key={i} value={subCat.id}>
+                                        {subCat.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </div>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Status Properti{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <select
+                            className='w-full select select-bordered'
+                            name='type'
+                            defaultValue={0}
+                            value={form.isSold}
+                            onChange={handleChange}
+                        >
+                            <option value={0}>Belum terjual</option>
+                            <option value={1}>Terjual</option>
                         </select>
                     </div>
                     {category === 'baru' && (
@@ -156,6 +419,7 @@ export default function CreatePropertyPage() {
                                         className='w-full input input-bordered'
                                         placeholder='Masukkan ID Proyek'
                                         required
+                                        value={form.project_id}
                                         onChange={handleChange}
                                     />
                                 </div>
@@ -175,8 +439,10 @@ export default function CreatePropertyPage() {
                                 </label>
                                 <input
                                     type='file'
+                                    name='floorplan'
                                     className='w-full file-input file-input-bordered'
                                     accept='image/jpeg, image/png, image/jpg'
+                                    onChange={handleFloorplanChange}
                                 />
                                 <label className='label'>
                                     <span className='label-text-alt'>
@@ -228,7 +494,7 @@ export default function CreatePropertyPage() {
                                     <MdLocationOn size={23} />
                                 </span>
                                 <input
-                                    name='location'
+                                    name='address'
                                     type='text'
                                     className='w-full input input-bordered'
                                     placeholder='Masukkan alamat lengkap properti'
@@ -436,7 +702,6 @@ export default function CreatePropertyPage() {
                             className='w-full input input-bordered'
                             placeholder='Masukkan jenis kepemilikan'
                             required
-                            maxLength={5}
                             value={form.building_condition}
                             onChange={handleChange}
                         />
@@ -445,6 +710,100 @@ export default function CreatePropertyPage() {
                                 Contoh: Siap Huni, Renovasi, dll
                             </span>
                         </label>
+                    </div>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Arah Bangunan{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <select
+                            className='w-full select select-bordered'
+                            name='building_direction'
+                            value={form.building_direction}
+                            onChange={handleChange}
+                        >
+                            <option value='' disabled>
+                                Pilih arah mata angin{' '}
+                            </option>
+                            {buildingDirectionList.map((item) => (
+                                <option key={item.id} value={item.name}>
+                                    {item.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className='space-y-5'>
+                        {form.facilities.length > 0 && (
+                            <>
+                                <p className='pt-4 text-lg font-semibold text-gray-700'>
+                                    Fasilitas Properti ({form.facilities.length}
+                                    )
+                                </p>
+
+                                <div className='flex flex-wrap items-center gap-4'>
+                                    {form.facilities &&
+                                        form.facilities.map(
+                                            (facility, index) => (
+                                                <div
+                                                    className='relative h-12 pl-4 pr-12 overflow-hidden text-white bg-primary rounded-xl flexStart'
+                                                    key={index}
+                                                >
+                                                    <p>{facility}</p>
+                                                    <button
+                                                        className='absolute -translate-y-1/2 top-1/2 right-2'
+                                                        onClick={() =>
+                                                            handleDeleteFacilities(
+                                                                index
+                                                            )
+                                                        }
+                                                    >
+                                                        <svg
+                                                            xmlns='http://www.w3.org/2000/svg'
+                                                            className='w-6 h-6 text-red-500'
+                                                            viewBox='0 0 20 20'
+                                                            fill='#fff'
+                                                        >
+                                                            <path
+                                                                fillRule='evenodd'
+                                                                d='M10.707 10l4.147 4.146a.5.5 0 01-.708.708L10 10.707l-4.146 4.147a.5.5 0 01-.708-.708L9.293 10 5.146 5.854a.5.5 0 11.708-.708L10 9.293l4.146-4.147a.5.5 0 11.708.708L10.707 10z'
+                                                                clipRule='evenodd'
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )
+                                        )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Fasilitas Properti{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <div className='input-group'>
+                            <input
+                                name='facilities'
+                                type='text'
+                                className='w-full input input-bordered'
+                                placeholder='Masukkan nama fasilitas properti'
+                                value={formFacilities}
+                                onChange={handleFacilitiesChange}
+                            />
+                            <button
+                                className='btn btn-primary'
+                                onClick={handleAddFacilities}
+                            >
+                                Tambah
+                            </button>
+                        </div>
                     </div>
                 </main>
             </SectionWrapper>
@@ -567,9 +926,35 @@ export default function CreatePropertyPage() {
                 />
 
                 <main>
-                    <div className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'>
+                    <div
+                        className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'
+                        onClick={() => fileInputRef.current.click()}
+                        ref={fileInputWrapperRef}
+                        onDragEnter={() =>
+                            fileInputWrapperRef.current.classList.add(
+                                'border-primary'
+                            )
+                        }
+                        onDragLeave={() =>
+                            fileInputWrapperRef.current.classList.remove(
+                                'border-primary'
+                            )
+                        }
+                        onDrop={() =>
+                            fileInputWrapperRef.current.classList.remove(
+                                'border-primary'
+                            )
+                        }
+                    >
+                        <input
+                            type='file'
+                            className='hidden'
+                            onChange={handlePictureChange}
+                            ref={fileInputRef}
+                            multiple
+                        />
                         <h2 className='text-2xl font-semibold text-center text-gray-700'>
-                            Drag and drop your file here
+                            Click to upload
                         </h2>
                         <p className='text-center text-secondary'>
                             or
@@ -578,27 +963,65 @@ export default function CreatePropertyPage() {
                         </p>
                     </div>
 
-                    <div className='pt-8'>
-                        <p className='text-lg font-semibold text-gray-700'>
-                            Preview Foto
-                        </p>
-                    </div>
+                    {formPicture.length > 0 && (
+                        <>
+                            <div className='pt-8'>
+                                <p className='text-lg font-semibold text-gray-700'>
+                                    Preview Foto ({formPicture.length})
+                                </p>
+                            </div>
 
-                    <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-4'>
-                        <div className='bg-gray-200 h-52 rounded-xl'></div>
-                        <div className='bg-gray-200 h-52 rounded-xl'></div>
-                        <div className='bg-gray-200 h-52 rounded-xl'></div>
-                        <div className='bg-gray-200 h-52 rounded-xl'></div>
-                        <div className='bg-gray-200 h-52 rounded-xl'></div>
-                    </div>
+                            <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-3'>
+                                {formPicture &&
+                                    formPicture.map((picture, index) => (
+                                        <div
+                                            className='relative overflow-hidden bg-gray-200 h-72 rounded-xl'
+                                            key={index}
+                                        >
+                                            <img
+                                                src={picture}
+                                                alt='Upload'
+                                                className='object-cover w-full h-full'
+                                            />
+
+                                            <div className='absolute top-2 right-2'>
+                                                <button
+                                                    type='button'
+                                                    className='text-white btn btn-error'
+                                                    onClick={() =>
+                                                        handleDeletePicture(
+                                                            index
+                                                        )
+                                                    }
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        </>
+                    )}
                 </main>
 
                 <div className='flex justify-end gap-4 pt-8 pb-2 mt-10 border-t border-borderPrimary'>
-                    <button type='button' className='text-white btn btn-error'>
+                    <button
+                        type='button'
+                        className='text-white btn btn-error'
+                        onClick={() => navigate('/property')}
+                    >
                         Batalkan
                     </button>
-                    <button type='submit' className='text-white btn btn-info'>
-                        Posting
+                    <button
+                        type='submit'
+                        className='text-white btn btn-info'
+                        disabled={isCreatePropertyLoading}
+                    >
+                        {isCreatePropertyLoading ? (
+                            <PulseLoader size={8} color='#fff' />
+                        ) : (
+                            'Simpan'
+                        )}
                     </button>
                 </div>
             </SectionWrapper>

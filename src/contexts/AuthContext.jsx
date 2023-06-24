@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
 
     const { isLoading: isAuthLoading } = useQuery(
         ['user', token],
-        () => getUserDataApi(),
+        getUserDataApi,
         {
             retry: 0,
             refetchOnMount: false,

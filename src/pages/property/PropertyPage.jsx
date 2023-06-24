@@ -8,11 +8,13 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllPropertyApi } from '../../api/property-api';
 import { dateFormater, textDotsFormat } from '../../utils/formaters';
 import CategoryBadge from '../../components/badges/CategoryBadge';
+import useStore from '../../hooks/useStore';
 
 export default function PropertyPage() {
     const navigate = useNavigate();
     const [category, setCategory] = useState('');
     const [error, setError] = useState(false);
+    const { categories } = useStore();
 
     const { data: propertyData, isLoading: isPropertyLoading } = useQuery(
         ['property'],
@@ -88,8 +90,6 @@ export default function PropertyPage() {
         window.stepOne.showModal();
     };
 
-    console.log(propertyData);
-
     const handleSubmitCategory = () => {
         setError(false);
 
@@ -140,9 +140,15 @@ export default function PropertyPage() {
                                     <option value='' disabled>
                                         Pilih Category
                                     </option>
-                                    <option value='baru'>Baru</option>
-                                    <option value='dijual'>Dijual</option>
-                                    <option value='disewa'>Disewa</option>
+                                    {categories &&
+                                        categories?.map((item) => (
+                                            <option
+                                                key={item.id}
+                                                value={item.name.toLowerCase()}
+                                            >
+                                                {item.name}
+                                            </option>
+                                        ))}
                                 </select>
                                 <label className='label'>
                                     {error ? (
@@ -186,6 +192,7 @@ export default function PropertyPage() {
                     data={data}
                     columns={columns}
                     addAction={handleAddNewProperty}
+                    isLoading={isPropertyLoading}
                 />
             </SectionWrapper>
         </>
