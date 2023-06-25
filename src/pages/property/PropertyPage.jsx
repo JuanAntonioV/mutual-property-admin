@@ -4,17 +4,23 @@ import SectionWrapper from '../../components/wrappers/SectionWrapper';
 import SectionHeader from '../../components/headers/SectionHeader';
 import MainTable from '../../components/tables/MainTable';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getAllPropertyApi } from '../../api/property-api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { deletePropertyApi, getAllPropertyApi } from '../../api/property-api';
 import { dateFormater, textDotsFormat } from '../../utils/formaters';
 import CategoryBadge from '../../components/badges/CategoryBadge';
 import useStore from '../../hooks/useStore';
+import { BiTrash } from 'react-icons/bi';
+import { toast } from 'react-toastify';
+import { PulseLoader } from 'react-spinners';
 
 export default function PropertyPage() {
     const navigate = useNavigate();
     const [category, setCategory] = useState('');
     const [error, setError] = useState(false);
     const { categories } = useStore();
+    const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+
+    const queryClient = useQueryClient();
 
     const { data: propertyData, isLoading: isPropertyLoading } = useQuery(
         ['property'],
@@ -58,6 +64,26 @@ export default function PropertyPage() {
         []
     );
 
+    const { mutate: deleteProperty, isLoading: isDeleteLoading } = useMutation(
+        (payload) => deletePropertyApi(payload),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries('property');
+                toast.success('Berhasil menghapus property');
+            },
+        }
+    );
+
+    const handleDeletePropertyClicked = (id) => {
+        setSelectedPropertyId(id);
+        window.deletePropertyModal.showModal();
+    };
+
+    const handleDeletePropertyModal = () => {
+        deleteProperty(selectedPropertyId);
+        window.deletePropertyModal.close();
+    };
+
     const data = useMemo(() => {
         let count = 1;
         return propertyData
@@ -76,8 +102,24 @@ export default function PropertyPage() {
                       marketingName: item?.staff_details?.full_name,
                       action: (
                           <div className='space-x-4'>
-                              <button className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit '>
+                              <button
+                                  className='btn btn-outline btn-sm hover:bg-gray-100 hover:text-inherit'
+                                  onClick={() => navigate(`${item.id}`)}
+                              >
                                   <AiOutlineFileSearch size={20} />
+                              </button>
+                              <button
+                                  className='bg-red-500 hover:bg-red-600 btn btn-sm hover:text-inherit'
+                                  onClick={() =>
+                                      handleDeletePropertyClicked(item.id)
+                                  }
+                                  disabled={isDeleteLoading}
+                              >
+                                  {isDeleteLoading ? (
+                                      <PulseLoader size={10} color='#fff' />
+                                  ) : (
+                                      <BiTrash size={20} color='#fff' />
+                                  )}
                               </button>
                           </div>
                       ),
@@ -107,7 +149,7 @@ export default function PropertyPage() {
                 <form method='dialog' className='space-y-6 modal-box'>
                     <header>
                         <button
-                            htmlFor='my-modal-3'
+                            htmlFor='stepOne'
                             className='absolute btn btn-sm btn-circle btn-ghost right-2 top-2'
                         >
                             ✕
@@ -179,6 +221,38 @@ export default function PropertyPage() {
                             </button>
                         </div>
                     </footer>
+                </form>
+            </dialog>
+
+            <dialog id='deletePropertyModal' className='modal'>
+                <form method='dialog' className='modal-box'>
+                    <header>
+                        <button
+                            htmlFor='my-modal-3'
+                            className='absolute btn btn-sm btn-circle btn-ghost right-2 top-2'
+                        >
+                            ✕
+                        </button>
+                        <h3 className='text-lg font-bold'>Hapus Properti</h3>
+                    </header>
+                    <main className='mt-5'>
+                        <p className='text-base'>
+                            Apakah anda yakin ingin menghapus properti ini?
+                        </p>
+                    </main>
+                    <footer className='pt-4 modal-action'>
+                        <button className='btn'>Batalkan</button>
+                        <button
+                            type='button'
+                            className='text-white btn btn-error'
+                            onClick={handleDeletePropertyModal}
+                        >
+                            Hapus
+                        </button>
+                    </footer>
+                </form>
+                <form method='dialog' className='modal-backdrop'>
+                    <button>close</button>
                 </form>
             </dialog>
 

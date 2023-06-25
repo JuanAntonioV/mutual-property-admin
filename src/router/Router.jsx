@@ -21,6 +21,7 @@ import {
 } from './middleware/AuthMiddleware';
 import useAuth from '../hooks/useAuth';
 import ResetPasswordPage from '../pages/auth/reset-password/ResetPasswordPage';
+import EditPropertyPage from '../pages/property/edit/EditPropertyPage';
 
 export default function Router() {
     const { isLoading, isAuthLoading, user } = useAuth();
@@ -68,6 +69,10 @@ export default function Router() {
                     />
 
                     <Route path='/property' element={<PropertyPage />} />
+                    <Route
+                        path='/property/:id'
+                        element={<EditPropertyPage />}
+                    />
                     <Route
                         path='/property/create/:category'
                         element={<CreatePropertyPage />}

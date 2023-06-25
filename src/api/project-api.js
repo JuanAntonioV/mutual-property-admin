@@ -46,3 +46,12 @@ export const updateProjectApi = async ({ projectId, data }) => {
         throw new Error(err.response.data.message);
     }
 };
+
+export const getAllPropertyProjectApi = async (projectId) => {
+    try {
+        const response = await api.get(`projects/${projectId}/products`);
+        return response.data;
+    } catch (err) {
+        throw new Error(err.response.data.message);
+    }
+};

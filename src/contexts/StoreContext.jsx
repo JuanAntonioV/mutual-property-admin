@@ -15,6 +15,7 @@ export const StoreProvider = ({ children }) => {
         isError: isCategoryError,
         error: categoryError,
     } = useQuery(['categories'], getAllCategoryApi, {
+        refetchOnWindowFocus: false,
         select: (res) => res.results,
         onSuccess: (data) => {
             setCategories(data);

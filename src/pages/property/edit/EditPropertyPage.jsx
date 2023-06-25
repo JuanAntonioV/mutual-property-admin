@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
@@ -9,27 +9,25 @@ import { FaBed, FaBath } from 'react-icons/fa';
 import { TbStairs } from 'react-icons/tb';
 import { HiDocumentText } from 'react-icons/hi';
 import { RiCarWashingFill } from 'react-icons/ri';
-import { useMutation } from '@tanstack/react-query';
-import { createPropertyApi } from '../../../api/property-api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    deletePropertyApi,
+    deletePropertyImageApi,
+    getPropertyDetailApi,
+    updatePropertyApi,
+} from '../../../api/property-api';
 import { PulseLoader } from 'react-spinners';
 import useStore from '../../../hooks/useStore';
 import { toast } from 'react-toastify';
 import { parseRupiah } from '../../../utils/helpers';
 import ErrorAlert from '../../../components/alerts/ErrorAlert';
+import ScreenLoading from '../../../components/handler/ScreenLoading';
+import { BiTrash } from 'react-icons/bi';
 
-export default function CreatePropertyPage() {
-    const { category } = useParams();
+export default function EditPropertyPage() {
+    const { id } = useParams();
     const navigate = useNavigate();
     const { categories } = useStore();
-
-    useEffect(() => {
-        if (
-            !categories &&
-            !categories?.find((item) => item.name.toLowerCase() === category)
-        ) {
-            navigate('/property');
-        }
-    }, [categories, category, navigate]);
 
     const [form, setForm] = useState({
         title: '',
@@ -59,19 +57,12 @@ export default function CreatePropertyPage() {
 
     const [formFacilities, setFormFacilities] = useState('');
 
+    const queryClient = useQueryClient();
+
     const [formPicture, setFormPicture] = useState([]);
     const fileInputRef = useRef(null);
 
     const fileInputWrapperRef = useRef(null);
-
-    useEffect(() => {
-        setForm((prev) => ({
-            ...prev,
-            category: categories?.find(
-                (item) => item.name.toLowerCase() === category
-            )?.id,
-        }));
-    }, [category, categories]);
 
     const handlePictureChange = (e) => {
         const { files } = e.target;
@@ -96,15 +87,6 @@ export default function CreatePropertyPage() {
 
         // FOR BUG IN CHROME
         e.target.value = '';
-    };
-
-    const handleDeletePicture = (index) => {
-        setForm((prev) => ({
-            ...prev,
-            images: prev.images.filter((_, i) => i !== index),
-        }));
-
-        setFormPicture((prev) => prev.filter((_, i) => i !== index));
     };
 
     const handleChange = (e) => {
@@ -203,20 +185,101 @@ export default function CreatePropertyPage() {
         },
     ];
 
+    const { isLoading, data: propertyDetailData } = useQuery(
+        ['propertyDetail'],
+        () => getPropertyDetailApi(id),
+        {
+            refetchOnWindowFocus: false,
+            select: (res) => res.results,
+            onSuccess: (res) => {
+                console.log(res);
+                const price = formatRupiah(res.price.toString());
+
+                const soil_size = res.detail.soil_area.split('m')[0];
+                const soil_height = soil_size.split('x')[0];
+                const soil_width = soil_size.split('x')[1];
+
+                const building_size = res.detail.building_size.split('m')[0];
+                const building_height = building_size.split('x')[0];
+                const building_width = building_size.split('x')[1];
+
+                setForm((prev) => ({
+                    ...prev,
+                    title: res.title,
+                    category: res.categories_id,
+                    subCategory: res.sub_categories_id,
+                    isSold: res.is_sold,
+                    price: price,
+                    address: res.address,
+                    location_link: res.map_url,
+                    beds: res.detail.bedroom,
+                    baths: res.detail.bathroom,
+                    floors: res.detail.floor,
+                    ownership: res.detail.certificate,
+                    carport: res.detail.garage,
+                    electricity_meter: res.detail.electricity_capacity,
+                    building_condition: res.detail.building_condition,
+                    building_direction: res.detail.building_direction,
+                    soil_size_height: parseInt(soil_height),
+                    soil_size_width: parseInt(soil_width),
+                    building_size_height: parseInt(building_height),
+                    building_size_width: parseInt(building_width),
+                    facilities: res.facility.map((item) => item.facility),
+                }));
+
+                setFormPicture(res.images.map((image) => image.path));
+            },
+        }
+    );
+
     const {
-        mutate: createProperty,
-        isLoading: isCreatePropertyLoading,
-        isError: isCreatePropertyError,
-        error: createPropertyError,
-    } = useMutation(createPropertyApi, {
+        mutate: deletePropertyImage,
+        isLoading: isDeletePropertyImageLoading,
+    } = useMutation((payload) => deletePropertyImageApi(payload), {
         onSuccess: () => {
-            toast.success('Berhasil membuat properti baru');
+            queryClient.invalidateQueries('propertyDetail');
+        },
+    });
+
+    const handleDeletePropertyImage = (path) => {
+        const selected = propertyDetailData.images.find(
+            (image) => image.path === path
+        );
+
+        deletePropertyImage({ propertyId: id, imageId: selected?.id });
+
+        setFormPicture((prev) => prev.filter((item) => item !== path));
+    };
+
+    const {
+        mutate: updateProperty,
+        isLoading: isUpdatePropertyLoading,
+        isError: isUpdatePropertyError,
+        error: updatePropertyError,
+    } = useMutation(updatePropertyApi, {
+        onSuccess: () => {
+            toast.success('Berhasil menyimpan properti');
             navigate(`/property`);
         },
         onError: () => {
-            toast.error('Gagal membuat properti baru');
+            toast.error('Gagal menyimpan properti');
         },
     });
+
+    const { mutate: deleteProperty, isLoading: isDeletePropertyLoading } =
+        useMutation(() => deletePropertyApi(), {
+            onSuccess: () => {
+                toast.success('Berhasil menghapus properti');
+                navigate(`/property`);
+            },
+            onError: () => {
+                toast.error('Gagal menghapus properti');
+            },
+        });
+
+    const handleDeleteProperty = () => {
+        deleteProperty(id);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -303,8 +366,10 @@ export default function CreatePropertyPage() {
             };
         }
 
-        createProperty(payload);
+        updateProperty({ propertyId: id, data: payload });
     };
+
+    if (isLoading) return <ScreenLoading />;
 
     return (
         <form onSubmit={handleSubmit}>
@@ -316,8 +381,8 @@ export default function CreatePropertyPage() {
 
                 <main className='space-y-4'>
                     <ErrorAlert
-                        isError={isCreatePropertyError}
-                        error={createPropertyError}
+                        isError={isUpdatePropertyError}
+                        error={updatePropertyError}
                     />
 
                     <div className='form-control'>
@@ -400,7 +465,7 @@ export default function CreatePropertyPage() {
                             <option value={1}>Terjual</option>
                         </select>
                     </div>
-                    {category === 'baru' && (
+                    {form.category === 3 && (
                         <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
                             <div className='w-full form-control'>
                                 <label className='label'>
@@ -957,7 +1022,7 @@ export default function CreatePropertyPage() {
                             Click to upload
                         </h2>
                         <p className='text-center text-secondary'>
-                            and
+                            or
                             <span className='text-gray-700'> browse </span>
                             to choose a file
                         </p>
@@ -984,17 +1049,27 @@ export default function CreatePropertyPage() {
                                                 className='object-cover w-full h-full'
                                             />
 
-                                            <div className='absolute top-2 right-2'>
+                                            <div className='absolute duration-200 shadow-lg hover:shadow-sm top-2 right-2'>
                                                 <button
                                                     type='button'
                                                     className='text-white btn btn-error'
                                                     onClick={() =>
-                                                        handleDeletePicture(
-                                                            index
+                                                        handleDeletePropertyImage(
+                                                            picture
                                                         )
                                                     }
+                                                    disabled={
+                                                        isDeletePropertyImageLoading
+                                                    }
                                                 >
-                                                    Hapus
+                                                    {isDeletePropertyImageLoading ? (
+                                                        <PulseLoader
+                                                            size={8}
+                                                            color='#fff'
+                                                        />
+                                                    ) : (
+                                                        'Hapus'
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
@@ -1007,7 +1082,22 @@ export default function CreatePropertyPage() {
                 <div className='flex justify-end gap-4 pt-8 pb-2 mt-10 border-t border-borderPrimary'>
                     <button
                         type='button'
-                        className='text-white btn btn-error'
+                        className='text-white bg-red-600 btn hover:bg-red-700'
+                        onClick={handleDeleteProperty}
+                        disabled={isDeletePropertyLoading}
+                    >
+                        {isDeletePropertyLoading ? (
+                            <PulseLoader size={8} color='#fff' />
+                        ) : (
+                            <BiTrash size={20} />
+                        )}
+                    </button>
+
+                    <div className='h-12 w-[1px] bg-borderPrimary '></div>
+
+                    <button
+                        type='button'
+                        className='text-white bg-gray-400 btn hover:bg-gray-500'
                         onClick={() => navigate('/property')}
                     >
                         Batalkan
@@ -1015,9 +1105,9 @@ export default function CreatePropertyPage() {
                     <button
                         type='submit'
                         className='text-white btn btn-info'
-                        disabled={isCreatePropertyLoading}
+                        disabled={isUpdatePropertyLoading}
                     >
-                        {isCreatePropertyLoading ? (
+                        {isUpdatePropertyLoading ? (
                             <PulseLoader size={8} color='#fff' />
                         ) : (
                             'Simpan'

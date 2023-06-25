@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 const MODE = import.meta.env.VITE_ENV_MODE;
 const BASE_URL_LOCAL = import.meta.env.VITE_API_ADMIN_LOCAL_URL;
@@ -18,21 +17,6 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
-        return Promise.reject(error);
-    }
-);
-
-api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        const navigate = useNavigate();
-
-        if (error.response.status === 401) {
-            localStorage.removeItem('token');
-            navigate('/login');
-        }
         return Promise.reject(error);
     }
 );
