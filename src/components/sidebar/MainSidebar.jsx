@@ -6,41 +6,50 @@ import { MdSpaceDashboard, MdOutlineUnsubscribe } from 'react-icons/md';
 import { RiAdminLine } from 'react-icons/ri';
 import { TbBuildingCommunity } from 'react-icons/tb';
 import { BsBuildings, BsMailbox } from 'react-icons/bs';
+import useAuth from '../../hooks/useAuth';
 
 export default function MainSidebar() {
     const navigate = useNavigate();
     const location = useLocation();
+
+    const { user } = useAuth();
 
     const menus = [
         {
             name: 'Dashboard',
             icon: <MdSpaceDashboard size={28} color='#fff' />,
             path: '/dashboard',
+            role: ['admin', 'marketing'],
         },
         {
             name: 'Projects',
             icon: <BsBuildings size={28} color='#fff' />,
             path: '/projects',
+            role: ['admin', 'marketing'],
         },
         {
             name: 'Property',
             icon: <TbBuildingCommunity size={28} color='#fff' />,
             path: '/property',
+            role: ['admin', 'marketing'],
         },
         {
             name: 'Contacts',
             icon: <BsMailbox size={28} color='#fff' />,
             path: '/contacts',
+            role: ['admin'],
         },
         {
             name: 'Subscriptions',
             icon: <MdOutlineUnsubscribe size={28} color='#fff' />,
             path: '/subscriptions',
+            role: ['admin', 'marketing'],
         },
         {
             name: 'Admins',
             icon: <RiAdminLine size={28} color='#fff' />,
             path: '/admins',
+            role: ['admin'],
         },
     ];
 
@@ -60,25 +69,33 @@ export default function MainSidebar() {
 
             <main>
                 <nav className='flex flex-col space-y-1'>
-                    {menus.map((menu, index) => (
-                        <button
-                            className={
-                                'flex items-center px-8 py-4 space-x-4 text-white transition duration-200 ease-in-out hover:bg-gray-700'
-                            }
-                            key={index}
-                            style={{
-                                backgroundColor: location.pathname.startsWith(
-                                    menu.path
-                                )
-                                    ? '#1E86FF'
-                                    : '',
-                            }}
-                            onClick={() => navigate(menu.path)}
-                        >
-                            {menu.icon}
-                            <span className='font-semibold'>{menu.name}</span>
-                        </button>
-                    ))}
+                    {user &&
+                        menus
+                            .filter((data) =>
+                                data.role.includes(user?.detail?.position)
+                            )
+                            .map((menu, index) => (
+                                <button
+                                    className={
+                                        'flex items-center px-8 py-4 space-x-4 text-white transition duration-200 ease-in-out hover:bg-gray-700'
+                                    }
+                                    key={index}
+                                    style={{
+                                        backgroundColor:
+                                            location.pathname.startsWith(
+                                                menu.path
+                                            )
+                                                ? '#1E86FF'
+                                                : '',
+                                    }}
+                                    onClick={() => navigate(menu.path)}
+                                >
+                                    {menu.icon}
+                                    <span className='font-semibold'>
+                                        {menu.name}
+                                    </span>
+                                </button>
+                            ))}
                 </nav>
             </main>
         </div>

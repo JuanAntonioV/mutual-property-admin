@@ -4,10 +4,10 @@ import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import { FcInfo } from 'react-icons/fc';
 import { useNavigate } from 'react-router-dom';
 import ErrorAlert from '../../components/alerts/ErrorAlert';
-import useAuth from '../../hooks/useAuth';
 import { PulseLoader } from 'react-spinners';
 import { useMutation } from '@tanstack/react-query';
 import { createAdminApi } from '../../api/admin-api';
+import { toast } from 'react-toastify';
 
 export default function CreateAdminPage() {
     const navigate = useNavigate();
@@ -47,14 +47,20 @@ export default function CreateAdminPage() {
         }));
     };
 
-    const { isError, error } = useAuth();
-
-    const { mutate: createAdmin, isLoading: isCreateAdminLoading } =
-        useMutation((payload) => createAdminApi(payload), {
-            onSuccess: () => {
-                navigate('/admins');
-            },
-        });
+    const {
+        mutate: createAdmin,
+        isLoading: isCreateAdminLoading,
+        isError: isCreateAdminError,
+        error: createAdminError,
+    } = useMutation((payload) => createAdminApi(payload), {
+        onSuccess: () => {
+            toast.success('Berhasil menambahkan admin');
+            navigate('/admins');
+        },
+        onError: () => {
+            toast.error('Gagal menambahkan admin');
+        },
+    });
 
     const handleOnProfileFormSubmit = (e) => {
         e.preventDefault();
@@ -88,7 +94,10 @@ export default function CreateAdminPage() {
 
             <main>
                 <ErrorAlert isError={formError} errorMessage={formError} />
-                <ErrorAlert isError={isError} errorMessage={error} />
+                <ErrorAlert
+                    isError={isCreateAdminError}
+                    error={createAdminError}
+                />
                 <form
                     className='space-y-4'
                     onSubmit={handleOnProfileFormSubmit}
