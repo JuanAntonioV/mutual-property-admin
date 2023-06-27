@@ -5,7 +5,7 @@ import { HiDocumentText } from 'react-icons/hi';
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { BsEnvelopeFill, BsTelephoneFill } from 'react-icons/bs';
 import { IoLogoWhatsapp } from 'react-icons/io';
 import { toast } from 'react-toastify';
@@ -22,6 +22,7 @@ export default function CreateProjectPage() {
     const [logoImg, setLogoImg] = useState('');
     const [projectForm, setProjectForm] = useState({
         name: '',
+        developerName: '',
         email: '',
         price: '',
         address: '',
@@ -88,6 +89,45 @@ export default function CreateProjectPage() {
         }
     };
 
+    const [formPicture, setFormPicture] = useState([]);
+    const fileInputRef = useRef(null);
+
+    const fileInputWrapperRef = useRef(null);
+
+    const handlePictureChange = (e) => {
+        const { files } = e.target;
+
+        const selectedFilesArray = Array.from(files);
+
+        if (selectedFilesArray.length > 10) {
+            toast.error('Maksimal 10 gambar');
+            return;
+        }
+
+        setProjectForm((prev) => ({
+            ...prev,
+            images: prev.images.concat(selectedFilesArray),
+        }));
+
+        const imagesArray = selectedFilesArray.map((file) => {
+            return URL.createObjectURL(file);
+        });
+
+        setFormPicture((prev) => prev.concat(imagesArray));
+
+        // FOR BUG IN CHROME
+        e.target.value = '';
+    };
+
+    const handleDeletePicture = (index) => {
+        setProjectForm((prev) => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index),
+        }));
+
+        setFormPicture((prev) => prev.filter((_, i) => i !== index));
+    };
+
     const handleImageOnLogoFormChange = (e) => {
         const { files } = e.target;
         const uploaded = files[0];
@@ -116,6 +156,7 @@ export default function CreateProjectPage() {
 
         const payload = {
             name: projectForm.name,
+            developer_name: projectForm.developerName,
             email: projectForm.email,
             started_price: parseRupiah(projectForm.price),
             address: projectForm.address,
@@ -131,6 +172,7 @@ export default function CreateProjectPage() {
             side_plan_image: projectForm.side_plan_image,
             logo_image: projectForm.logo_image,
             description: editorData,
+            images: projectForm.images,
         };
 
         createProject(payload);
@@ -144,20 +186,22 @@ export default function CreateProjectPage() {
                     detail='Menu ini digunakan untuk membuat project baru.'
                 />
 
-                <div className='mb-6 avatar'>
-                    <div className='border rounded-lg w-60 aspect-auto border-borderPrimary'>
-                        <LazyImage
-                            src={logoImg}
-                            className='!object-cover !w-60 !h-60'
-                        />
+                {logoImg && (
+                    <div className='mb-6 avatar'>
+                        <div className='border rounded-lg w-60 aspect-auto border-borderPrimary'>
+                            <LazyImage
+                                src={logoImg}
+                                className='!object-cover !w-60 !h-60'
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <main className='space-y-2'>
                     <div className='form-control'>
                         <label className='label'>
                             <span className='label-text'>
-                                Nama Developer{' '}
+                                Nama Proyek{' '}
                                 <span className='text-red-500'>*</span>
                             </span>
                         </label>
@@ -166,6 +210,23 @@ export default function CreateProjectPage() {
                             type='text'
                             onChange={handleInputChange}
                             value={projectForm.name}
+                            className='input input-bordered'
+                            placeholder='Masukkan nama proyek'
+                            required
+                        />
+                    </div>
+                    <div className='form-control'>
+                        <label className='label'>
+                            <span className='label-text'>
+                                Nama Developer{' '}
+                                <span className='text-red-500'>*</span>
+                            </span>
+                        </label>
+                        <input
+                            name='developerName'
+                            type='text'
+                            onChange={handleInputChange}
+                            value={projectForm.developerName}
                             className='input input-bordered'
                             placeholder='Masukkan nama developer'
                             required
@@ -518,6 +579,92 @@ export default function CreateProjectPage() {
                             }}
                         />
                     </div>
+                </main>
+            </SectionWrapper>
+
+            <SectionWrapper>
+                <SectionHeader
+                    title='Foto Proyek'
+                    detail='Menu ini digunakan untuk melihat foto proyek'
+                />
+
+                <main>
+                    <div
+                        className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'
+                        onClick={() => fileInputRef.current.click()}
+                        ref={fileInputWrapperRef}
+                        onDragEnter={() =>
+                            fileInputWrapperRef.current.classList.add(
+                                'border-primary'
+                            )
+                        }
+                        onDragLeave={() =>
+                            fileInputWrapperRef.current.classList.remove(
+                                'border-primary'
+                            )
+                        }
+                        onDrop={() =>
+                            fileInputWrapperRef.current.classList.remove(
+                                'border-primary'
+                            )
+                        }
+                    >
+                        <input
+                            type='file'
+                            className='hidden'
+                            onChange={handlePictureChange}
+                            ref={fileInputRef}
+                            multiple
+                        />
+                        <h2 className='text-2xl font-semibold text-center text-gray-700'>
+                            Click to upload
+                        </h2>
+                        <p className='text-center text-secondary'>
+                            and
+                            <span className='text-gray-700'> browse </span>
+                            to choose a file
+                        </p>
+                    </div>
+
+                    {formPicture.length > 0 && (
+                        <>
+                            <div className='pt-8'>
+                                <p className='text-lg font-semibold text-gray-700'>
+                                    Preview Foto ({formPicture.length})
+                                </p>
+                            </div>
+
+                            <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-3'>
+                                {formPicture &&
+                                    formPicture.map((picture, index) => (
+                                        <div
+                                            className='relative overflow-hidden bg-gray-200 h-72 rounded-xl'
+                                            key={index}
+                                        >
+                                            <img
+                                                src={picture}
+                                                alt='Upload'
+                                                className='object-cover w-full h-full'
+                                            />
+
+                                            <div className='absolute top-2 right-2'>
+                                                <button
+                                                    type='button'
+                                                    className='text-white btn btn-error'
+                                                    onClick={() =>
+                                                        handleDeletePicture(
+                                                            index
+                                                        )
+                                                    }
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        </>
+                    )}
                 </main>
 
                 <footer className='mt-16'>

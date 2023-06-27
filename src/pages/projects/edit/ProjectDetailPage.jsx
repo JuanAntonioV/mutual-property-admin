@@ -5,12 +5,14 @@ import { HiDocumentText } from 'react-icons/hi';
 
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { BsEnvelopeFill, BsTelephoneFill } from 'react-icons/bs';
 import { IoLogoWhatsapp } from 'react-icons/io';
 import { toast } from 'react-toastify';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+    deleteProjectApi,
+    deleteProjectImageApi,
     getAllPropertyProjectApi,
     getProjectDetailApi,
     updateProjectApi,
@@ -36,6 +38,7 @@ export default function EditProjectPage() {
     const [logoImg, setLogoImg] = useState('');
     const [projectForm, setProjectForm] = useState({
         name: '',
+        developerName: '',
         email: '',
         price: '',
         address: '',
@@ -51,6 +54,7 @@ export default function EditProjectPage() {
         price_list_image: '',
         side_plan_image: '',
         logo_image: '',
+        images: [],
     });
 
     const onChangeImage = (e) => {
@@ -120,10 +124,6 @@ export default function EditProjectPage() {
         () => getProjectDetailApi(id),
         {
             select: (res) => res.results,
-            onSuccess: () => {
-                queryClient.invalidateQueries('projects');
-                queryClient.invalidateQueries(['projectDetail']);
-            },
         }
     );
 
@@ -134,6 +134,7 @@ export default function EditProjectPage() {
             setProjectForm((prev) => ({
                 ...prev,
                 name: projectData?.name,
+                developerName: projectData?.developer_name,
                 email: projectData?.email,
                 price: priceFormated,
                 status: projectData?.status ? 1 : 0,
@@ -151,10 +152,74 @@ export default function EditProjectPage() {
                 logo_image: projectData?.logo,
             }));
 
+            setFormPicture(projectData?.images?.map((image) => image.path));
             setLogoImg(projectData?.logo);
             projectData?.description && setEditorData(projectData?.description);
         }
     }, [projectData]);
+
+    const [formPicture, setFormPicture] = useState([]);
+    const fileInputRef = useRef(null);
+
+    const fileInputWrapperRef = useRef(null);
+
+    const handlePictureChange = (e) => {
+        const { files } = e.target;
+
+        const selectedFilesArray = Array.from(files);
+
+        if (selectedFilesArray.length > 10) {
+            toast.error('Maksimal 10 gambar');
+            return;
+        }
+
+        setProjectForm((prev) => ({
+            ...prev,
+            images: prev.images.concat(selectedFilesArray),
+        }));
+
+        const imagesArray = selectedFilesArray.map((file) => {
+            return URL.createObjectURL(file);
+        });
+
+        setFormPicture((prev) => prev.concat(imagesArray));
+
+        // FOR BUG IN CHROME
+        e.target.value = '';
+    };
+
+    const {
+        mutate: deleteProjectImage,
+        isLoading: isDeleteProjectImageLoading,
+    } = useMutation((payload) => deleteProjectImageApi(payload), {
+        onSuccess: () => {
+            queryClient.invalidateQueries('projectDetail');
+        },
+    });
+
+    const handleDeleteProjectImage = (path) => {
+        const selected = projectData?.images?.find(
+            (image) => image.path === path
+        );
+
+        deleteProjectImage({ projectId: parseInt(id), imageId: selected?.id });
+
+        setFormPicture((prev) => prev.filter((item) => item !== path));
+    };
+
+    const { mutate: deleteProject, isLoading: isDeleteProjectLoading } =
+        useMutation((payload) => deleteProjectApi(payload), {
+            onSuccess: () => {
+                toast.success('Berhasil menghapus proyek');
+            },
+            onError: () => {
+                toast.error('Gagal menghapus proyek');
+            },
+        });
+
+    const handleDeleteProject = () => {
+        window.deleteProjectConfirmation.showModal();
+    };
 
     const { mutate: updateProject, isLoading: isUpdatingProjectLoading } =
         useMutation((payload) => updateProjectApi(payload), {
@@ -174,6 +239,7 @@ export default function EditProjectPage() {
 
         const payload = {
             name: projectForm.name,
+            developer_name: projectForm.developerName,
             email: projectForm.email,
             started_price: parseRupiah(projectForm.price) || 0,
             address: projectForm.address,
@@ -190,6 +256,7 @@ export default function EditProjectPage() {
             side_plan_image: projectForm.side_plan_image,
             logo_image: projectForm.logo_image,
             description: editorData,
+            images: projectForm.images,
         };
 
         updateProject({ projectId: id, data: payload });
@@ -287,6 +354,41 @@ export default function EditProjectPage() {
 
     return (
         <>
+            <dialog id='deleteProjectConfirmation' className='modal'>
+                <form method='dialog' className='modal-box'>
+                    <header>
+                        <button
+                            htmlFor='deleteProjectConfirmation'
+                            className='absolute btn btn-sm btn-circle btn-ghost right-2 top-2'
+                        >
+                            ✕
+                        </button>
+                        <h3 className='text-lg font-bold'>Hapus Proyek</h3>
+                    </header>
+                    <main>
+                        <p className='py-4'>
+                            Anda yakin untuk menghapus proyek ini?
+                        </p>
+                    </main>
+                    <footer className='modal-action'>
+                        {/* if there is a button in form, it will close the modal */}
+                        <button className='btn'>Batalkan</button>
+                        <button
+                            type='button'
+                            className='text-white bg-red-600 hover:bg-red-700 btn btn-error'
+                            onClick={() => deleteProject(id)}
+                            disabled={isDeleteProjectLoading}
+                        >
+                            {isDeleteProjectLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                'Hapus'
+                            )}
+                        </button>
+                    </footer>
+                </form>
+            </dialog>
+
             <form onSubmit={handleSubmit}>
                 <SectionWrapper className='mt-2'>
                     <SectionHeader
@@ -702,8 +804,119 @@ export default function EditProjectPage() {
                             />
                         </div>
                     </main>
+                </SectionWrapper>
 
-                    <footer className='mt-16'>
+                <SectionWrapper>
+                    <SectionHeader
+                        title='Foto Proyek'
+                        detail='Menu ini digunakan untuk melihat foto proyek'
+                    />
+
+                    <main>
+                        <div
+                            className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'
+                            onClick={() => fileInputRef.current.click()}
+                            ref={fileInputWrapperRef}
+                            onDragEnter={() =>
+                                fileInputWrapperRef.current.classList.add(
+                                    'border-primary'
+                                )
+                            }
+                            onDragLeave={() =>
+                                fileInputWrapperRef.current.classList.remove(
+                                    'border-primary'
+                                )
+                            }
+                            onDrop={() =>
+                                fileInputWrapperRef.current.classList.remove(
+                                    'border-primary'
+                                )
+                            }
+                        >
+                            <input
+                                type='file'
+                                className='hidden'
+                                onChange={handlePictureChange}
+                                ref={fileInputRef}
+                                multiple
+                            />
+                            <h2 className='text-2xl font-semibold text-center text-gray-700'>
+                                Click to upload
+                            </h2>
+                            <p className='text-center text-secondary'>
+                                and
+                                <span className='text-gray-700'> browse </span>
+                                to choose a file
+                            </p>
+                        </div>
+
+                        {formPicture?.length > 0 && (
+                            <>
+                                <div className='pt-8'>
+                                    <p className='text-lg font-semibold text-gray-700'>
+                                        Preview Foto ({formPicture?.length})
+                                    </p>
+                                </div>
+
+                                <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-3'>
+                                    {formPicture &&
+                                        formPicture?.map((picture, index) => (
+                                            <div
+                                                className='relative overflow-hidden bg-gray-200 h-72 rounded-xl'
+                                                key={index}
+                                            >
+                                                <img
+                                                    src={picture}
+                                                    alt='Upload'
+                                                    className='object-cover w-full h-full'
+                                                />
+
+                                                <div className='absolute duration-200 shadow-lg hover:shadow-sm top-2 right-2'>
+                                                    <button
+                                                        type='button'
+                                                        className='text-white btn btn-error'
+                                                        onClick={() =>
+                                                            handleDeleteProjectImage(
+                                                                picture
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isDeleteProjectImageLoading
+                                                        }
+                                                    >
+                                                        {isDeleteProjectImageLoading ? (
+                                                            <PulseLoader
+                                                                size={8}
+                                                                color='#fff'
+                                                            />
+                                                        ) : (
+                                                            'Hapus'
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            </>
+                        )}
+                    </main>
+
+                    <footer className='flex justify-end gap-4 pt-8 pb-2 mt-16 border-t border-borderPrimary'>
+                        <button
+                            type='button'
+                            className='text-white bg-red-600 btn hover:bg-red-700'
+                            onClick={handleDeleteProject}
+                            disabled={isDeleteProjectLoading}
+                        >
+                            {isDeleteProjectLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                <BiTrash size={20} />
+                            )}
+                        </button>
+
+                        <div className='h-12 w-[1px] bg-borderPrimary '></div>
+
                         <div className='flex justify-end gap-4'>
                             <Link
                                 to={'/projects'}

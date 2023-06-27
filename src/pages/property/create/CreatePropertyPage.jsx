@@ -9,7 +9,7 @@ import { FaBed, FaBath } from 'react-icons/fa';
 import { TbStairs } from 'react-icons/tb';
 import { HiDocumentText } from 'react-icons/hi';
 import { RiCarWashingFill } from 'react-icons/ri';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPropertyApi } from '../../../api/property-api';
 import { PulseLoader } from 'react-spinners';
 import useStore from '../../../hooks/useStore';
@@ -203,6 +203,8 @@ export default function CreatePropertyPage() {
         },
     ];
 
+    const queryClient = useQueryClient();
+
     const {
         mutate: createProperty,
         isLoading: isCreatePropertyLoading,
@@ -211,6 +213,7 @@ export default function CreatePropertyPage() {
     } = useMutation(createPropertyApi, {
         onSuccess: () => {
             toast.success('Berhasil membuat properti baru');
+            queryClient.invalidateQueries('property');
             navigate(`/property`);
         },
         onError: () => {

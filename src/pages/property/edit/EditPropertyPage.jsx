@@ -192,7 +192,6 @@ export default function EditPropertyPage() {
             refetchOnWindowFocus: false,
             select: (res) => res.results,
             onSuccess: (res) => {
-                console.log(res);
                 const price = formatRupiah(res.price.toString());
 
                 const soil_size = res.detail.soil_area.split('m')[0];
@@ -227,7 +226,7 @@ export default function EditPropertyPage() {
                     facilities: res.facility.map((item) => item.facility),
                 }));
 
-                setFormPicture(res.images.map((image) => image.path));
+                setFormPicture(res?.images?.map((image) => image.path));
             },
         }
     );
@@ -246,7 +245,10 @@ export default function EditPropertyPage() {
             (image) => image.path === path
         );
 
-        deletePropertyImage({ propertyId: id, imageId: selected?.id });
+        deletePropertyImage({
+            propertyId: parseInt(id),
+            imageId: selected?.id,
+        });
 
         setFormPicture((prev) => prev.filter((item) => item !== path));
     };
@@ -278,7 +280,7 @@ export default function EditPropertyPage() {
         });
 
     const handleDeleteProperty = () => {
-        deleteProperty(id);
+        window.deletePropertyConfirmation.showModal();
     };
 
     const handleSubmit = (e) => {
@@ -372,749 +374,792 @@ export default function EditPropertyPage() {
     if (isLoading) return <ScreenLoading />;
 
     return (
-        <form onSubmit={handleSubmit}>
-            <SectionWrapper className={'mt-0 pb-10'}>
-                <SectionHeader
-                    title='Create Property'
-                    detail='Menu ini digunakan untuk membuat property baru'
-                />
+        <>
+            <dialog id='deletePropertyConfirmation' className='modal'>
+                <form method='dialog' className='modal-box'>
+                    <header>
+                        <button
+                            htmlFor='deletePropertyConfirmation'
+                            className='absolute btn btn-sm btn-circle btn-ghost right-2 top-2'
+                        >
+                            ✕
+                        </button>
+                        <h3 className='text-lg font-bold'>Hapus Properti</h3>
+                    </header>
+                    <main>
+                        <p className='py-4'>
+                            Anda yakin untuk menghapus properti ini?
+                        </p>
+                    </main>
+                    <footer className='modal-action'>
+                        {/* if there is a button in form, it will close the modal */}
+                        <button className='btn'>Batalkan</button>
+                        <button
+                            type='button'
+                            className='text-white bg-red-600 hover:bg-red-700 btn btn-error'
+                            onClick={() => deleteProperty(id)}
+                            disabled={isDeletePropertyLoading}
+                        >
+                            {isDeletePropertyLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                'Hapus'
+                            )}
+                        </button>
+                    </footer>
+                </form>
+            </dialog>
 
-                <main className='space-y-4'>
-                    <ErrorAlert
-                        isError={isUpdatePropertyError}
-                        error={updatePropertyError}
+            <form onSubmit={handleSubmit}>
+                <SectionWrapper className={'mt-0 pb-10'}>
+                    <SectionHeader
+                        title='Create Property'
+                        detail='Menu ini digunakan untuk membuat property baru'
                     />
 
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Judul Properti{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <input
-                            name='title'
-                            type='text'
-                            className='input input-bordered'
-                            placeholder='Masukkan judul properti'
-                            required
-                            value={form.title}
-                            onChange={handleChange}
+                    <main className='space-y-4'>
+                        <ErrorAlert
+                            isError={isUpdatePropertyError}
+                            error={updatePropertyError}
                         />
-                    </div>
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Kategori Properti{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <select
-                            className='w-full select select-bordered'
-                            name='type'
-                            value={form.category}
-                            onChange={handleChange}
-                            disabled
-                        >
-                            <option value=''>Pilih kategori</option>
-                            {categories?.map((cat, i) => (
-                                <option key={i} value={cat.id}>
-                                    {cat.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Tipe Properti{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <select
-                            className='w-full select select-bordered'
-                            name='subCategory'
-                            value={form.subCategory}
-                            onChange={handleChange}
-                        >
-                            <option value=''>Pilih Tipe Property</option>
-                            {categories
-                                ?.find((cat) => cat.id === form.category)
-                                ?.sub_categories?.map((subCat, i) => (
-                                    <option key={i} value={subCat.id}>
-                                        {subCat.name}
+
+                        <div className='form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Judul Properti{' '}
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <input
+                                name='title'
+                                type='text'
+                                className='input input-bordered'
+                                placeholder='Masukkan judul properti'
+                                required
+                                value={form.title}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className='form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Kategori Properti{' '}
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <select
+                                className='w-full select select-bordered'
+                                name='type'
+                                value={form.category}
+                                onChange={handleChange}
+                                disabled
+                            >
+                                <option value=''>Pilih kategori</option>
+                                {categories?.map((cat, i) => (
+                                    <option key={i} value={cat.id}>
+                                        {cat.name}
                                     </option>
                                 ))}
-                        </select>
-                    </div>
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Status Properti{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <select
-                            className='w-full select select-bordered'
-                            name='type'
-                            defaultValue={0}
-                            value={form.isSold}
-                            onChange={handleChange}
-                        >
-                            <option value={0}>Belum terjual</option>
-                            <option value={1}>Terjual</option>
-                        </select>
-                    </div>
-                    {form.category === 3 && (
+                            </select>
+                        </div>
+                        <div className='form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Tipe Properti{' '}
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <select
+                                className='w-full select select-bordered'
+                                name='subCategory'
+                                value={form.subCategory}
+                                onChange={handleChange}
+                            >
+                                <option value=''>Pilih Tipe Property</option>
+                                {categories
+                                    ?.find((cat) => cat.id === form.category)
+                                    ?.sub_categories?.map((subCat, i) => (
+                                        <option key={i} value={subCat.id}>
+                                            {subCat.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                        <div className='form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Status Properti{' '}
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <select
+                                className='w-full select select-bordered'
+                                name='type'
+                                defaultValue={0}
+                                value={form.isSold}
+                                onChange={handleChange}
+                            >
+                                <option value={0}>Belum terjual</option>
+                                <option value={1}>Terjual</option>
+                            </select>
+                        </div>
+                        {form.category === 3 && (
+                            <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
+                                <div className='w-full form-control'>
+                                    <label className='label'>
+                                        <span className='label-text'>
+                                            ID Proyek{' '}
+                                            <span className='text-red-500'>
+                                                *
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <div className='input-group'>
+                                        <span className='font-bold input-group-addon text-primary'>
+                                            ID
+                                        </span>
+                                        <input
+                                            name='project_id'
+                                            type='text'
+                                            className='w-full input input-bordered'
+                                            placeholder='Masukkan ID Proyek'
+                                            required
+                                            value={form.project_id}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <label className='label'>
+                                        <span className='label-text-alt'>
+                                            Silahkan copy atau masukkan ID
+                                            proyek dari menu proyek.
+                                        </span>
+                                    </label>
+                                </div>
+                                <div className='w-full form-control'>
+                                    <label className='label'>
+                                        <span className='label-text'>
+                                            Upload Floorplan{' '}
+                                            <span className='text-red-500'>
+                                                *
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <input
+                                        type='file'
+                                        name='floorplan'
+                                        className='w-full file-input file-input-bordered'
+                                        accept='image/jpeg, image/png, image/jpg'
+                                        onChange={handleFloorplanChange}
+                                    />
+                                    <label className='label'>
+                                        <span className='label-text-alt'>
+                                            Format: JPG, PNG, JPEG. Maksimal 5MB
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </SectionWrapper>
+
+                <SectionWrapper className={'pb-10'}>
+                    <SectionHeader
+                        title='Harga / Alamat Properti'
+                        detail='Menu ini digunakan untuk membuat property baru'
+                    />
+                    <main className='space-y-4'>
+                        <div className='form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Harga Properti{' '}
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <div className='input-group'>
+                                <span className='font-bold text-primary'>
+                                    Rp
+                                </span>
+                                <input
+                                    name='price'
+                                    type='text'
+                                    className='w-full input input-bordered'
+                                    placeholder='Masukkan harga properti'
+                                    required
+                                    value={form.price}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
                         <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
                             <div className='w-full form-control'>
                                 <label className='label'>
                                     <span className='label-text'>
-                                        ID Proyek{' '}
+                                        Alamat Lengkap Properti{' '}
                                         <span className='text-red-500'>*</span>
                                     </span>
                                 </label>
                                 <div className='input-group'>
-                                    <span className='font-bold input-group-addon text-primary'>
-                                        ID
+                                    <span className='input-group-addon text-primary'>
+                                        <MdLocationOn size={23} />
                                     </span>
                                     <input
-                                        name='project_id'
+                                        name='address'
                                         type='text'
                                         className='w-full input input-bordered'
-                                        placeholder='Masukkan ID Proyek'
+                                        placeholder='Masukkan alamat lengkap properti'
                                         required
-                                        value={form.project_id}
+                                        value={form.address}
                                         onChange={handleChange}
                                     />
                                 </div>
                                 <label className='label'>
                                     <span className='label-text-alt'>
-                                        Silahkan copy atau masukkan ID proyek
-                                        dari menu proyek.
+                                        Pastikan lokasi properti sudah benar
                                     </span>
                                 </label>
                             </div>
                             <div className='w-full form-control'>
                                 <label className='label'>
                                     <span className='label-text'>
-                                        Upload Floorplan{' '}
+                                        Link Lokasi Properti{' '}
                                         <span className='text-red-500'>*</span>
                                     </span>
                                 </label>
-                                <input
-                                    type='file'
-                                    name='floorplan'
-                                    className='w-full file-input file-input-bordered'
-                                    accept='image/jpeg, image/png, image/jpg'
-                                    onChange={handleFloorplanChange}
-                                />
+                                <div className='input-group'>
+                                    <span className='input-group-addon text-primary'>
+                                        <MdMyLocation size={23} />
+                                    </span>
+                                    <input
+                                        name='location_link'
+                                        type='text'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan link google maps lokasi properti'
+                                        required
+                                        value={form.location_link}
+                                        onChange={handleChange}
+                                    />
+                                </div>
                                 <label className='label'>
                                     <span className='label-text-alt'>
-                                        Format: JPG, PNG, JPEG. Maksimal 5MB
+                                        Silahkan copy link google maps lokasi
                                     </span>
                                 </label>
                             </div>
                         </div>
-                    )}
-                </main>
-            </SectionWrapper>
+                    </main>
+                </SectionWrapper>
 
-            <SectionWrapper className={'pb-10'}>
-                <SectionHeader
-                    title='Harga / Alamat Properti'
-                    detail='Menu ini digunakan untuk membuat property baru'
-                />
-                <main className='space-y-4'>
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Harga Properti{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <div className='input-group'>
-                            <span className='font-bold text-primary'>Rp</span>
-                            <input
-                                name='price'
-                                type='text'
-                                className='w-full input input-bordered'
-                                placeholder='Masukkan harga properti'
-                                required
-                                value={form.price}
-                                onChange={handleChange}
-                            />
+                <SectionWrapper className={'pb-10'}>
+                    <SectionHeader
+                        title='Detail Properti'
+                        detail='Menu ini digunakan untuk membuat property baru'
+                    />
+
+                    <main className='space-y-4'>
+                        <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Jumlah Kamar Tidur{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <span className='input-group-addon text-primary'>
+                                        <FaBed size={23} />
+                                    </span>
+                                    <input
+                                        name='beds'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan jumlah kamar tidur'
+                                        required
+                                        value={form.beds}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Jumlah Kamar Mandi{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <span className='input-group-addon text-primary'>
+                                        <FaBath size={23} />
+                                    </span>
+                                    <input
+                                        name='baths'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan jumlah kamar mandi'
+                                        required
+                                        value={form.baths}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Jumlah Tingkat Lantai{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <span className='input-group-addon text-primary'>
+                                        <TbStairs size={23} />
+                                    </span>
+                                    <input
+                                        name='floors'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan jumlah tingkat lantai'
+                                        required
+                                        value={form.floors}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className='flex flex-wrap items-center w-full space-y-4 gap-x-8 md:flex-nowrap md:space-y-0'>
                         <div className='w-full form-control'>
                             <label className='label'>
                                 <span className='label-text'>
-                                    Alamat Lengkap Properti{' '}
+                                    Jenis Kepemilikan{' '}
                                     <span className='text-red-500'>*</span>
                                 </span>
                             </label>
                             <div className='input-group'>
                                 <span className='input-group-addon text-primary'>
-                                    <MdLocationOn size={23} />
+                                    <HiDocumentText size={23} />
                                 </span>
                                 <input
-                                    name='address'
+                                    name='ownership'
                                     type='text'
                                     className='w-full input input-bordered'
-                                    placeholder='Masukkan alamat lengkap properti'
+                                    placeholder='Masukkan jenis kepemilikan'
                                     required
-                                    value={form.address}
+                                    maxLength={5}
+                                    value={form.ownership}
                                     onChange={handleChange}
                                 />
                             </div>
                             <label className='label'>
                                 <span className='label-text-alt'>
-                                    Pastikan lokasi properti sudah benar
+                                    Contoh: SHM, SHGB, AJB, dll
                                 </span>
                             </label>
                         </div>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Link Lokasi Properti{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <span className='input-group-addon text-primary'>
-                                    <MdMyLocation size={23} />
-                                </span>
-                                <input
-                                    name='location_link'
-                                    type='text'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan link google maps lokasi properti'
-                                    required
-                                    value={form.location_link}
-                                    onChange={handleChange}
-                                />
+                        <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Jumlah Garasi Mobil{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <span className='input-group-addon text-primary'>
+                                        <RiCarWashingFill size={23} />
+                                    </span>
+                                    <input
+                                        name='carport'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan jumlah garasi mobil'
+                                        required
+                                        value={form.carport}
+                                        onChange={handleChange}
+                                    />
+                                </div>
                             </div>
-                            <label className='label'>
-                                <span className='label-text-alt'>
-                                    Silahkan copy link google maps lokasi
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </main>
-            </SectionWrapper>
-
-            <SectionWrapper className={'pb-10'}>
-                <SectionHeader
-                    title='Detail Properti'
-                    detail='Menu ini digunakan untuk membuat property baru'
-                />
-
-                <main className='space-y-4'>
-                    <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Jumlah Kamar Tidur{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <span className='input-group-addon text-primary'>
-                                    <FaBed size={23} />
-                                </span>
-                                <input
-                                    name='beds'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan jumlah kamar tidur'
-                                    required
-                                    value={form.beds}
-                                    onChange={handleChange}
-                                />
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Meteran Listrik{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <input
+                                        name='electricity_meter'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan jumlah garasi mobil'
+                                        required
+                                        value={form.electricity_meter}
+                                        onChange={handleChange}
+                                    />
+                                    <span className='font-semibold input-group-addon text-primary'>
+                                        Watt
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div className='w-full form-control'>
                             <label className='label'>
                                 <span className='label-text'>
-                                    Jumlah Kamar Mandi{' '}
+                                    Kondisi Bangunan{' '}
                                     <span className='text-red-500'>*</span>
                                 </span>
                             </label>
-                            <div className='input-group'>
-                                <span className='input-group-addon text-primary'>
-                                    <FaBath size={23} />
-                                </span>
-                                <input
-                                    name='baths'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan jumlah kamar mandi'
-                                    required
-                                    value={form.baths}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Jumlah Tingkat Lantai{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <span className='input-group-addon text-primary'>
-                                    <TbStairs size={23} />
-                                </span>
-                                <input
-                                    name='floors'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan jumlah tingkat lantai'
-                                    required
-                                    value={form.floors}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div className='w-full form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Jenis Kepemilikan{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <div className='input-group'>
-                            <span className='input-group-addon text-primary'>
-                                <HiDocumentText size={23} />
-                            </span>
                             <input
-                                name='ownership'
+                                name='building_condition'
                                 type='text'
                                 className='w-full input input-bordered'
                                 placeholder='Masukkan jenis kepemilikan'
                                 required
-                                maxLength={5}
-                                value={form.ownership}
+                                value={form.building_condition}
                                 onChange={handleChange}
                             />
+                            <label className='label'>
+                                <span className='label-text-alt'>
+                                    Contoh: Siap Huni, Renovasi, dll
+                                </span>
+                            </label>
                         </div>
-                        <label className='label'>
-                            <span className='label-text-alt'>
-                                Contoh: SHM, SHGB, AJB, dll
-                            </span>
-                        </label>
-                    </div>
-                    <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
-                        <div className='w-full form-control'>
+                        <div className='form-control'>
                             <label className='label'>
                                 <span className='label-text'>
-                                    Jumlah Garasi Mobil{' '}
+                                    Arah Bangunan{' '}
                                     <span className='text-red-500'>*</span>
                                 </span>
                             </label>
-                            <div className='input-group'>
-                                <span className='input-group-addon text-primary'>
-                                    <RiCarWashingFill size={23} />
-                                </span>
-                                <input
-                                    name='carport'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan jumlah garasi mobil'
-                                    required
-                                    value={form.carport}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Meteran Listrik{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <input
-                                    name='electricity_meter'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan jumlah garasi mobil'
-                                    required
-                                    value={form.electricity_meter}
-                                    onChange={handleChange}
-                                />
-                                <span className='font-semibold input-group-addon text-primary'>
-                                    Watt
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className='w-full form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Kondisi Bangunan{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <input
-                            name='building_condition'
-                            type='text'
-                            className='w-full input input-bordered'
-                            placeholder='Masukkan jenis kepemilikan'
-                            required
-                            value={form.building_condition}
-                            onChange={handleChange}
-                        />
-                        <label className='label'>
-                            <span className='label-text-alt'>
-                                Contoh: Siap Huni, Renovasi, dll
-                            </span>
-                        </label>
-                    </div>
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Arah Bangunan{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <select
-                            className='w-full select select-bordered'
-                            name='building_direction'
-                            value={form.building_direction}
-                            onChange={handleChange}
-                        >
-                            <option value='' disabled>
-                                Pilih arah mata angin{' '}
-                            </option>
-                            {buildingDirectionList.map((item) => (
-                                <option key={item.id} value={item.name}>
-                                    {item.name}
+                            <select
+                                className='w-full select select-bordered'
+                                name='building_direction'
+                                value={form.building_direction}
+                                onChange={handleChange}
+                            >
+                                <option value='' disabled>
+                                    Pilih arah mata angin{' '}
                                 </option>
-                            ))}
-                        </select>
-                    </div>
+                                {buildingDirectionList.map((item) => (
+                                    <option key={item.id} value={item.name}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <div className='space-y-5'>
-                        {form.facilities.length > 0 && (
+                        <div className='space-y-5'>
+                            {form.facilities.length > 0 && (
+                                <>
+                                    <p className='pt-4 text-lg font-semibold text-gray-700'>
+                                        Fasilitas Properti (
+                                        {form.facilities.length})
+                                    </p>
+
+                                    <div className='flex flex-wrap items-center gap-4'>
+                                        {form.facilities &&
+                                            form.facilities.map(
+                                                (facility, index) => (
+                                                    <div
+                                                        className='relative h-12 pl-4 pr-12 overflow-hidden text-white bg-primary rounded-xl flexStart'
+                                                        key={index}
+                                                    >
+                                                        <p>{facility}</p>
+                                                        <button
+                                                            className='absolute -translate-y-1/2 top-1/2 right-2'
+                                                            onClick={() =>
+                                                                handleDeleteFacilities(
+                                                                    index
+                                                                )
+                                                            }
+                                                        >
+                                                            <svg
+                                                                xmlns='http://www.w3.org/2000/svg'
+                                                                className='w-6 h-6 text-red-500'
+                                                                viewBox='0 0 20 20'
+                                                                fill='#fff'
+                                                            >
+                                                                <path
+                                                                    fillRule='evenodd'
+                                                                    d='M10.707 10l4.147 4.146a.5.5 0 01-.708.708L10 10.707l-4.146 4.147a.5.5 0 01-.708-.708L9.293 10 5.146 5.854a.5.5 0 11.708-.708L10 9.293l4.146-4.147a.5.5 0 11.708.708L10.707 10z'
+                                                                    clipRule='evenodd'
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                )
+                                            )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className='form-control'>
+                            <label className='label'>
+                                <span className='label-text'>
+                                    Fasilitas Properti{' '}
+                                    <span className='text-red-500'>*</span>
+                                </span>
+                            </label>
+                            <div className='input-group'>
+                                <input
+                                    name='facilities'
+                                    type='text'
+                                    className='w-full input input-bordered'
+                                    placeholder='Masukkan nama fasilitas properti'
+                                    value={formFacilities}
+                                    onChange={handleFacilitiesChange}
+                                />
+                                <button
+                                    className='btn btn-primary'
+                                    onClick={handleAddFacilities}
+                                >
+                                    Tambah
+                                </button>
+                            </div>
+                        </div>
+                    </main>
+                </SectionWrapper>
+
+                <SectionWrapper className={'pb-10'}>
+                    <SectionHeader
+                        title='Ukuran Properti'
+                        detail='Menu ini digunakan untuk membuat property baru'
+                    />
+
+                    <main>
+                        <div>
+                            <p className='mt-10 font-medium'>Ukuran Tanah</p>
+                        </div>
+
+                        <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Panjang{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <input
+                                        name='soil_size_height'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan ukuran tanah'
+                                        required
+                                        value={form.soil_size_height}
+                                        onChange={handleChange}
+                                    />
+                                    <span className='font-semibold input-group-addon text-primary'>
+                                        m
+                                    </span>
+                                </div>
+                            </div>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Lebar{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <input
+                                        name='soil_size_width'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan ukuran tanah'
+                                        required
+                                        value={form.soil_size_width}
+                                        onChange={handleChange}
+                                    />
+                                    <span className='font-semibold input-group-addon text-primary'>
+                                        m
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className='mt-8 font-medium'>Ukuran Bangunan</p>
+                        </div>
+
+                        <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Panjang{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <input
+                                        name='building_size_height'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan ukuran tanah'
+                                        required
+                                        value={form.building_size_height}
+                                        onChange={handleChange}
+                                    />
+                                    <span className='font-semibold input-group-addon text-primary'>
+                                        m
+                                    </span>
+                                </div>
+                            </div>
+                            <div className='w-full form-control'>
+                                <label className='label'>
+                                    <span className='label-text'>
+                                        Lebar{' '}
+                                        <span className='text-red-500'>*</span>
+                                    </span>
+                                </label>
+                                <div className='input-group'>
+                                    <input
+                                        name='building_size_width'
+                                        type='number'
+                                        className='w-full input input-bordered'
+                                        placeholder='Masukkan ukuran tanah'
+                                        required
+                                        value={form.building_size_width}
+                                        onChange={handleChange}
+                                    />
+                                    <span className='font-semibold input-group-addon text-primary'>
+                                        m
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </SectionWrapper>
+
+                <SectionWrapper>
+                    <SectionHeader
+                        title='Foto Properti'
+                        detail='Menu ini digunakan untuk membuat property baru'
+                    />
+
+                    <main>
+                        <div
+                            className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'
+                            onClick={() => fileInputRef.current.click()}
+                            ref={fileInputWrapperRef}
+                            onDragEnter={() =>
+                                fileInputWrapperRef.current.classList.add(
+                                    'border-primary'
+                                )
+                            }
+                            onDragLeave={() =>
+                                fileInputWrapperRef.current.classList.remove(
+                                    'border-primary'
+                                )
+                            }
+                            onDrop={() =>
+                                fileInputWrapperRef.current.classList.remove(
+                                    'border-primary'
+                                )
+                            }
+                        >
+                            <input
+                                type='file'
+                                className='hidden'
+                                onChange={handlePictureChange}
+                                ref={fileInputRef}
+                                multiple
+                            />
+                            <h2 className='text-2xl font-semibold text-center text-gray-700'>
+                                Click to upload
+                            </h2>
+                            <p className='text-center text-secondary'>
+                                or
+                                <span className='text-gray-700'> browse </span>
+                                to choose a file
+                            </p>
+                        </div>
+
+                        {formPicture?.length > 0 && (
                             <>
-                                <p className='pt-4 text-lg font-semibold text-gray-700'>
-                                    Fasilitas Properti ({form.facilities.length}
-                                    )
-                                </p>
+                                <div className='pt-8'>
+                                    <p className='text-lg font-semibold text-gray-700'>
+                                        Preview Foto ({formPicture?.length})
+                                    </p>
+                                </div>
 
-                                <div className='flex flex-wrap items-center gap-4'>
-                                    {form.facilities &&
-                                        form.facilities.map(
-                                            (facility, index) => (
-                                                <div
-                                                    className='relative h-12 pl-4 pr-12 overflow-hidden text-white bg-primary rounded-xl flexStart'
-                                                    key={index}
-                                                >
-                                                    <p>{facility}</p>
+                                <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-3'>
+                                    {formPicture &&
+                                        formPicture?.map((picture, index) => (
+                                            <div
+                                                className='relative overflow-hidden bg-gray-200 h-72 rounded-xl'
+                                                key={index}
+                                            >
+                                                <img
+                                                    src={picture}
+                                                    alt='Upload'
+                                                    className='object-cover w-full h-full'
+                                                />
+
+                                                <div className='absolute duration-200 shadow-lg hover:shadow-sm top-2 right-2'>
                                                     <button
-                                                        className='absolute -translate-y-1/2 top-1/2 right-2'
+                                                        type='button'
+                                                        className='text-white btn btn-error'
                                                         onClick={() =>
-                                                            handleDeleteFacilities(
-                                                                index
+                                                            handleDeletePropertyImage(
+                                                                picture
                                                             )
                                                         }
+                                                        disabled={
+                                                            isDeletePropertyImageLoading
+                                                        }
                                                     >
-                                                        <svg
-                                                            xmlns='http://www.w3.org/2000/svg'
-                                                            className='w-6 h-6 text-red-500'
-                                                            viewBox='0 0 20 20'
-                                                            fill='#fff'
-                                                        >
-                                                            <path
-                                                                fillRule='evenodd'
-                                                                d='M10.707 10l4.147 4.146a.5.5 0 01-.708.708L10 10.707l-4.146 4.147a.5.5 0 01-.708-.708L9.293 10 5.146 5.854a.5.5 0 11.708-.708L10 9.293l4.146-4.147a.5.5 0 11.708.708L10.707 10z'
-                                                                clipRule='evenodd'
+                                                        {isDeletePropertyImageLoading ? (
+                                                            <PulseLoader
+                                                                size={8}
+                                                                color='#fff'
                                                             />
-                                                        </svg>
+                                                        ) : (
+                                                            'Hapus'
+                                                        )}
                                                     </button>
                                                 </div>
-                                            )
-                                        )}
+                                            </div>
+                                        ))}
                                 </div>
                             </>
                         )}
+                    </main>
+
+                    <div className='flex justify-end gap-4 pt-8 pb-2 mt-10 border-t border-borderPrimary'>
+                        <button
+                            type='button'
+                            className='text-white bg-red-600 btn hover:bg-red-700'
+                            onClick={handleDeleteProperty}
+                            disabled={isDeletePropertyLoading}
+                        >
+                            {isDeletePropertyLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                <BiTrash size={20} />
+                            )}
+                        </button>
+
+                        <div className='h-12 w-[1px] bg-borderPrimary '></div>
+
+                        <button
+                            type='button'
+                            className='text-white bg-gray-400 btn hover:bg-gray-500'
+                            onClick={() => navigate('/property')}
+                        >
+                            Batalkan
+                        </button>
+                        <button
+                            type='submit'
+                            className='text-white btn btn-info'
+                            disabled={isUpdatePropertyLoading}
+                        >
+                            {isUpdatePropertyLoading ? (
+                                <PulseLoader size={8} color='#fff' />
+                            ) : (
+                                'Simpan'
+                            )}
+                        </button>
                     </div>
-
-                    <div className='form-control'>
-                        <label className='label'>
-                            <span className='label-text'>
-                                Fasilitas Properti{' '}
-                                <span className='text-red-500'>*</span>
-                            </span>
-                        </label>
-                        <div className='input-group'>
-                            <input
-                                name='facilities'
-                                type='text'
-                                className='w-full input input-bordered'
-                                placeholder='Masukkan nama fasilitas properti'
-                                value={formFacilities}
-                                onChange={handleFacilitiesChange}
-                            />
-                            <button
-                                className='btn btn-primary'
-                                onClick={handleAddFacilities}
-                            >
-                                Tambah
-                            </button>
-                        </div>
-                    </div>
-                </main>
-            </SectionWrapper>
-
-            <SectionWrapper className={'pb-10'}>
-                <SectionHeader
-                    title='Ukuran Properti'
-                    detail='Menu ini digunakan untuk membuat property baru'
-                />
-
-                <main>
-                    <div>
-                        <p className='mt-10 font-medium'>Ukuran Tanah</p>
-                    </div>
-
-                    <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Panjang{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <input
-                                    name='soil_size_height'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan ukuran tanah'
-                                    required
-                                    value={form.soil_size_height}
-                                    onChange={handleChange}
-                                />
-                                <span className='font-semibold input-group-addon text-primary'>
-                                    m
-                                </span>
-                            </div>
-                        </div>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Lebar{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <input
-                                    name='soil_size_width'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan ukuran tanah'
-                                    required
-                                    value={form.soil_size_width}
-                                    onChange={handleChange}
-                                />
-                                <span className='font-semibold input-group-addon text-primary'>
-                                    m
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <p className='mt-8 font-medium'>Ukuran Bangunan</p>
-                    </div>
-
-                    <div className='flex flex-wrap items-center w-full space-y-4 lg:flex-nowrap md:space-y-0 gap-x-8'>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Panjang{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <input
-                                    name='building_size_height'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan ukuran tanah'
-                                    required
-                                    value={form.building_size_height}
-                                    onChange={handleChange}
-                                />
-                                <span className='font-semibold input-group-addon text-primary'>
-                                    m
-                                </span>
-                            </div>
-                        </div>
-                        <div className='w-full form-control'>
-                            <label className='label'>
-                                <span className='label-text'>
-                                    Lebar{' '}
-                                    <span className='text-red-500'>*</span>
-                                </span>
-                            </label>
-                            <div className='input-group'>
-                                <input
-                                    name='building_size_width'
-                                    type='number'
-                                    className='w-full input input-bordered'
-                                    placeholder='Masukkan ukuran tanah'
-                                    required
-                                    value={form.building_size_width}
-                                    onChange={handleChange}
-                                />
-                                <span className='font-semibold input-group-addon text-primary'>
-                                    m
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </SectionWrapper>
-
-            <SectionWrapper>
-                <SectionHeader
-                    title='Foto Properti'
-                    detail='Menu ini digunakan untuk membuat property baru'
-                />
-
-                <main>
-                    <div
-                        className='flex-col gap-3 px-10 py-20 duration-200 border-2 border-dashed cursor-pointer rounded-2xl flexCenter bg-gray-50 hover:bg-gray-100'
-                        onClick={() => fileInputRef.current.click()}
-                        ref={fileInputWrapperRef}
-                        onDragEnter={() =>
-                            fileInputWrapperRef.current.classList.add(
-                                'border-primary'
-                            )
-                        }
-                        onDragLeave={() =>
-                            fileInputWrapperRef.current.classList.remove(
-                                'border-primary'
-                            )
-                        }
-                        onDrop={() =>
-                            fileInputWrapperRef.current.classList.remove(
-                                'border-primary'
-                            )
-                        }
-                    >
-                        <input
-                            type='file'
-                            className='hidden'
-                            onChange={handlePictureChange}
-                            ref={fileInputRef}
-                            multiple
-                        />
-                        <h2 className='text-2xl font-semibold text-center text-gray-700'>
-                            Click to upload
-                        </h2>
-                        <p className='text-center text-secondary'>
-                            or
-                            <span className='text-gray-700'> browse </span>
-                            to choose a file
-                        </p>
-                    </div>
-
-                    {formPicture.length > 0 && (
-                        <>
-                            <div className='pt-8'>
-                                <p className='text-lg font-semibold text-gray-700'>
-                                    Preview Foto ({formPicture.length})
-                                </p>
-                            </div>
-
-                            <div className='grid grid-cols-2 gap-4 mt-8 lg:grid-cols-3'>
-                                {formPicture &&
-                                    formPicture.map((picture, index) => (
-                                        <div
-                                            className='relative overflow-hidden bg-gray-200 h-72 rounded-xl'
-                                            key={index}
-                                        >
-                                            <img
-                                                src={picture}
-                                                alt='Upload'
-                                                className='object-cover w-full h-full'
-                                            />
-
-                                            <div className='absolute duration-200 shadow-lg hover:shadow-sm top-2 right-2'>
-                                                <button
-                                                    type='button'
-                                                    className='text-white btn btn-error'
-                                                    onClick={() =>
-                                                        handleDeletePropertyImage(
-                                                            picture
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        isDeletePropertyImageLoading
-                                                    }
-                                                >
-                                                    {isDeletePropertyImageLoading ? (
-                                                        <PulseLoader
-                                                            size={8}
-                                                            color='#fff'
-                                                        />
-                                                    ) : (
-                                                        'Hapus'
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                            </div>
-                        </>
-                    )}
-                </main>
-
-                <div className='flex justify-end gap-4 pt-8 pb-2 mt-10 border-t border-borderPrimary'>
-                    <button
-                        type='button'
-                        className='text-white bg-red-600 btn hover:bg-red-700'
-                        onClick={handleDeleteProperty}
-                        disabled={isDeletePropertyLoading}
-                    >
-                        {isDeletePropertyLoading ? (
-                            <PulseLoader size={8} color='#fff' />
-                        ) : (
-                            <BiTrash size={20} />
-                        )}
-                    </button>
-
-                    <div className='h-12 w-[1px] bg-borderPrimary '></div>
-
-                    <button
-                        type='button'
-                        className='text-white bg-gray-400 btn hover:bg-gray-500'
-                        onClick={() => navigate('/property')}
-                    >
-                        Batalkan
-                    </button>
-                    <button
-                        type='submit'
-                        className='text-white btn btn-info'
-                        disabled={isUpdatePropertyLoading}
-                    >
-                        {isUpdatePropertyLoading ? (
-                            <PulseLoader size={8} color='#fff' />
-                        ) : (
-                            'Simpan'
-                        )}
-                    </button>
-                </div>
-            </SectionWrapper>
-        </form>
+                </SectionWrapper>
+            </form>
+        </>
     );
 }
