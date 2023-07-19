@@ -37,6 +37,7 @@ export default function CreateProjectPage() {
         price_list_image: '',
         side_plan_image: '',
         logo_image: '',
+        images: [],
     });
 
     const onChangeImage = (e) => {
