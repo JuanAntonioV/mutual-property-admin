@@ -5,7 +5,7 @@ const BASE_URL_LOCAL = import.meta.env.VITE_API_ADMIN_LOCAL_URL;
 const BASE_URL_PROD = import.meta.env.VITE_API_ADMIN_PROD_URL;
 
 const api = axios.create({
-    baseURL: MODE === 'local' ? BASE_URL_LOCAL : BASE_URL_PROD,
+    baseURL: MODE === 'production' ? BASE_URL_PROD : BASE_URL_LOCAL,
 });
 
 api.interceptors.request.use(
