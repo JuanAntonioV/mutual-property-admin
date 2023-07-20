@@ -47,6 +47,7 @@ export const StoreProvider = ({ children }) => {
                 isLoading,
                 isError,
                 errorMessage,
+                setCategories,
             }}
         >
             {children}

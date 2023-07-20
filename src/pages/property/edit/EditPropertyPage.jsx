@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
@@ -23,11 +23,20 @@ import { parseRupiah } from '../../../utils/helpers';
 import ErrorAlert from '../../../components/alerts/ErrorAlert';
 import ScreenLoading from '../../../components/handler/ScreenLoading';
 import { BiTrash } from 'react-icons/bi';
+import { getAllCategoryApi } from '../../../api/category-api';
 
 export default function EditPropertyPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { categories } = useStore();
+    const { categories, setCategories } = useStore();
+
+    useQuery(['categories'], getAllCategoryApi, {
+        refetchOnWindowFocus: false,
+        select: (res) => res.results,
+        onSuccess: (data) => {
+            setCategories(data);
+        },
+    });
 
     const [form, setForm] = useState({
         title: '',
@@ -54,6 +63,10 @@ export default function EditPropertyPage() {
         images: [],
         facilities: [],
     });
+
+    useEffect(() => {
+        console.log(form.category);
+    }, [form]);
 
     const [formFacilities, setFormFacilities] = useState('');
 
@@ -477,7 +490,7 @@ export default function EditPropertyPage() {
                             >
                                 <option value=''>Pilih Tipe Property</option>
                                 {categories
-                                    ?.find((cat) => cat.id === form.category)
+                                    ?.find((cat) => cat.id == form.category)
                                     ?.sub_categories?.map((subCat, i) => (
                                         <option key={i} value={subCat.id}>
                                             {subCat.name}
