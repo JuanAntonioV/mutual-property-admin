@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SectionWrapper from '@/components/wrappers/SectionWrapper';
 import SectionHeader from '@/components/headers/SectionHeader';
@@ -63,10 +63,6 @@ export default function EditPropertyPage() {
         images: [],
         facilities: [],
     });
-
-    useEffect(() => {
-        console.log(form.category);
-    }, [form]);
 
     const [formFacilities, setFormFacilities] = useState('');
 

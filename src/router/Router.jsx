@@ -22,6 +22,9 @@ import {
 import useAuth from '../hooks/useAuth';
 import ResetPasswordPage from '../pages/auth/reset-password/ResetPasswordPage';
 import EditPropertyPage from '../pages/property/edit/EditPropertyPage';
+import NewsPage from '../pages/news/NewsPage';
+import EditNewsPage from '../pages/news/edit/EditNewsPage';
+import CreateNewsPage from '../pages/news/create/CreateNewsPage';
 
 export default function Router() {
     const { isLoading, isAuthLoading, user } = useAuth();
@@ -55,10 +58,12 @@ export default function Router() {
                 }
             >
                 <Route path='/' element={<Navigate to='/dashboard' />} />
+
                 <Route element={<MainLayout />}>
                     <Route path='/dashboard' element={<DashboardPage />} />
 
                     <Route path='/projects' element={<ProjectPage />} />
+
                     <Route
                         path='/projects/:id'
                         element={<ProjectDetailPage />}
@@ -82,8 +87,15 @@ export default function Router() {
                         path='/subscriptions'
                         element={<SubscriptionPage />}
                     />
+
+                    <Route path='/news' element={<NewsPage />} />
+                    <Route path='/news/create' element={<CreateNewsPage />} />
+                    <Route path='/news/:id' element={<EditNewsPage />} />
+
                     <Route path='/contacts' element={<ContactPage />} />
+
                     <Route path='/profile' element={<ProfilePage />} />
+
                     <Route path='/admins' element={<AdminPage />} />
                     <Route path='/admins/:id' element={<AdminDetailPage />} />
                     <Route
