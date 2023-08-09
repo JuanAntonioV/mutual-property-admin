@@ -6,7 +6,7 @@ import NotFoundPage from '../pages/notFound/NotFoundPage';
 import AdminPage from '../pages/admin/AdminPage';
 import PropertyPage from '../pages/property/PropertyPage';
 import SubscriptionPage from '../pages/subscriptions/SubscriptionPage';
-import ContactPage from '../pages/ContactPage';
+import ContactPage from '../pages/contacts/ContactPage';
 import ProfilePage from '../pages/profiles/ProfilePage';
 import AdminDetailPage from '../pages/admin/AdminDetailPage';
 import CreateAdminPage from '../pages/admin/CreateAdminPage';
@@ -25,6 +25,7 @@ import EditPropertyPage from '../pages/property/edit/EditPropertyPage';
 import NewsPage from '../pages/news/NewsPage';
 import EditNewsPage from '../pages/news/edit/EditNewsPage';
 import CreateNewsPage from '../pages/news/create/CreateNewsPage';
+import SalesRequestPage from '../pages/salesRequest/SalesRequestPage';
 
 export default function Router() {
     const { isLoading, isAuthLoading, user } = useAuth();
@@ -93,6 +94,10 @@ export default function Router() {
                     <Route path='/news/:id' element={<EditNewsPage />} />
 
                     <Route path='/contacts' element={<ContactPage />} />
+                    <Route
+                        path='/sales-request'
+                        element={<SalesRequestPage />}
+                    />
 
                     <Route path='/profile' element={<ProfilePage />} />
 

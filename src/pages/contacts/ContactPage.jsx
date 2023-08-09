@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import SectionHeader from '../components/headers/SectionHeader';
-import MainTable from '../components/tables/MainTable';
-import SectionWrapper from '../components/wrappers/SectionWrapper';
+import SectionHeader from '../../components/headers/SectionHeader';
+import MainTable from '../../components/tables/MainTable';
+import SectionWrapper from '../../components/wrappers/SectionWrapper';
 import { AiOutlineFileSearch } from 'react-icons/ai';
 import { useQuery } from '@tanstack/react-query';
-import { getAllContacts } from '../api/contact-api';
-import { dateFormater, textDotsFormat } from '../utils/formaters';
+import { getAllContacts } from '../../api/contact-api';
+import { dateFormater, textDotsFormat } from '../../utils/formaters';
 
 export default function ContactPage() {
     const [selectedData, setSelectedData] = useState(null);
@@ -29,8 +29,8 @@ export default function ContactPage() {
                 accessor: 'fullName',
             },
             {
-                Header: 'Email',
-                accessor: 'email',
+                Header: 'Nomor WhatsApp',
+                accessor: 'phone',
             },
             {
                 Header: 'Pesan',
@@ -55,7 +55,7 @@ export default function ContactPage() {
                   return {
                       count: count++,
                       fullName: contact.full_name,
-                      email: contact.email,
+                      phone: contact.phone,
                       message: textDotsFormat(contact.message, 50),
                       postedAt: dateFormater(contact.posted_at),
                       action: (
@@ -93,11 +93,14 @@ export default function ContactPage() {
                         </button>
                     </header>
                     <main className='py-4'>
-                        <p className='font-bold'>
-                            {selectedData?.full_name} - {selectedData?.email}
+                        <p>
+                            {selectedData?.full_name}{' '}
+                            <span className='font-bold'>
+                                ({selectedData?.phone})
+                            </span>
                         </p>
 
-                        <p className='mt-2'>{selectedData?.message}</p>
+                        <p className='mt-4'>{selectedData?.message}</p>
                     </main>
                     <footer className='modal-action'>
                         <button className='btn'>Close</button>

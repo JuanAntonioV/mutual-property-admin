@@ -5,7 +5,12 @@ import LogoWhite from '@/assets/brand/logo-white.svg';
 import { MdSpaceDashboard, MdOutlineUnsubscribe } from 'react-icons/md';
 import { RiAdminLine } from 'react-icons/ri';
 import { TbBuildingCommunity } from 'react-icons/tb';
-import { BsBuildings, BsMailbox, BsNewspaper } from 'react-icons/bs';
+import {
+    BsBuildings,
+    BsHouseAdd,
+    BsMailbox,
+    BsNewspaper,
+} from 'react-icons/bs';
 import useAuth from '../../hooks/useAuth';
 
 export default function MainSidebar() {
@@ -31,6 +36,12 @@ export default function MainSidebar() {
             name: 'Property',
             icon: <TbBuildingCommunity size={28} color='#fff' />,
             path: '/property',
+            role: ['admin', 'marketing'],
+        },
+        {
+            name: 'Sell Request',
+            icon: <BsHouseAdd size={28} color='#fff' />,
+            path: '/sales-request',
             role: ['admin', 'marketing'],
         },
         {

@@ -22,8 +22,8 @@ export default function SubscriptionPage() {
                 accessor: 'count',
             },
             {
-                Header: 'Email',
-                accessor: 'email',
+                Header: 'Nomor whatsApp',
+                accessor: 'phone',
             },
             {
                 Header: 'Tanggal Subscription',
@@ -39,7 +39,7 @@ export default function SubscriptionPage() {
             ? subscriptions?.map((item) => {
                   return {
                       count: count++,
-                      email: item.email,
+                      phone: item.phone,
                       postedAt: dateFormater(item.subscribed_at),
                   };
               })

@@ -8,3 +8,12 @@ export const getAllContacts = async () => {
         throw new Error(err.response.data.message);
     }
 };
+
+export const getAllSellProperty = async () => {
+    try {
+        const res = await api.get('sell-property');
+        return res.data;
+    } catch (err) {
+        throw new Error(err.response.data.message);
+    }
+};
