@@ -26,6 +26,7 @@ import NewsPage from '../pages/news/NewsPage';
 import EditNewsPage from '../pages/news/edit/EditNewsPage';
 import CreateNewsPage from '../pages/news/create/CreateNewsPage';
 import SalesRequestPage from '../pages/salesRequest/SalesRequestPage';
+import GalleryPage from '../pages/gallery/GalleryPage';
 
 export default function Router() {
     const { isLoading, isAuthLoading, user } = useAuth();
@@ -93,7 +94,10 @@ export default function Router() {
                     <Route path='/news/create' element={<CreateNewsPage />} />
                     <Route path='/news/:id' element={<EditNewsPage />} />
 
+                    <Route path='/gallery' element={<GalleryPage />} />
+
                     <Route path='/contacts' element={<ContactPage />} />
+
                     <Route
                         path='/sales-request'
                         element={<SalesRequestPage />}

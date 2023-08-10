@@ -12,6 +12,7 @@ import {
     BsNewspaper,
 } from 'react-icons/bs';
 import useAuth from '../../hooks/useAuth';
+import { BiImages } from 'react-icons/bi';
 
 export default function MainSidebar() {
     const navigate = useNavigate();
@@ -48,6 +49,12 @@ export default function MainSidebar() {
             name: 'News',
             icon: <BsNewspaper size={26} color='#fff' />,
             path: '/news',
+            role: ['admin'],
+        },
+        {
+            name: 'Gallery',
+            icon: <BiImages size={28} color='#fff' />,
+            path: '/gallery',
             role: ['admin'],
         },
         {

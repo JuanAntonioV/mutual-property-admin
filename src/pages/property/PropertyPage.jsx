@@ -246,8 +246,13 @@ export default function PropertyPage() {
                             type='button'
                             className='text-white btn btn-error'
                             onClick={handleDeletePropertyModal}
+                            disabled={isDeleteLoading}
                         >
-                            Hapus
+                            {isDeleteLoading ? (
+                                <PulseLoader size={10} color='#fff' />
+                            ) : (
+                                'Hapus'
+                            )}
                         </button>
                     </footer>
                 </form>
